@@ -181,15 +181,16 @@ code_docking/results/
 └── plots/                        # learning curves (.png)
 ```
 
-**File quan trọng nhất:** `results/models/<tên_model>/best_model.pt` (hoặc thư mục con có timestamp, ví dụ `geoformerdock_20260511_063122/best_model.pt` — đường dẫn ghi trong `summary.json` → `best_weights`).
+**File quan trọng nhất:** `results/models/<tên_model>/best_model.pt` (đường dẫn đầy đủ trong `summary.json` → `best_weights`, ví dụ `results/models/geoformerdock_20260511_063122/best_model.pt`).
 
-**Không đẩy `results/` lên GitHub** (dung lượng lớn). Tải bản đã train tại:
+**Không đẩy `results/` lên GitHub** (dung lượng lớn). Tải bản đã train:
 
-| | |
-|--|--|
-| **Link Google Drive / OneDrive** | ← **dán link tại [`results/README.md`](results/README.md)** |
+| Nguồn | Link |
+|-------|------|
+| **Google Drive** | https://drive.google.com/drive/folders/XXXXXXXX ← **dán link folder hoặc file zip `results` tại đây** |
+| OneDrive (tuỳ chọn) | |
 
-Sau khi tải về, giữ đúng cấu trúc `results/models/...` phía trên.
+Sau khi tải/giải nén, đặt vào `code_docking/results/` (giữ cấu trúc `models/`, `logs/`, `plots/` như trên).
 
 **Phân tích sau train (local):**
 

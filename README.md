@@ -1,4 +1,4 @@
-# code_docking — DockBench / GeoFormerDock
+# KhoaLuanTotNghiep_HVMD — DockBench / GeoFormerDock
 
 Mã nguồn huấn luyện và benchmark **7 mô hình** dự đoán **tư thế docking (pose)** và **affinity protein–ligand (pK)** trên lưới voxel 3D. Package Python: **`dockbench`**.
 

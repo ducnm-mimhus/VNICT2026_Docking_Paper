@@ -187,8 +187,7 @@ code_docking/results/
 
 | Nguồn | Link |
 |-------|------|
-| **Google Drive** | https://drive.google.com/drive/folders/XXXXXXXX ← **dán link folder hoặc file zip `results` tại đây** |
-| OneDrive (tuỳ chọn) | |
+| **Google Drive** | https://drive.google.com/drive/folders/1ItrUVa9PUFoiF_8khIOwb1OWHQURGrAp?usp=sharing |
 
 Sau khi tải/giải nén, đặt vào `code_docking/results/` (giữ cấu trúc `models/`, `logs/`, `plots/` như trên).
 
@@ -198,8 +197,6 @@ Sau khi tải/giải nén, đặt vào `code_docking/results/` (giữ cấu trú
 python tools/summarize_benchmark.py --models_dir results/models --logs_dir results/logs
 python tools/plot_training_curves.py --models_dir results/models --plots_dir results/plots
 ```
-
-**Inference không cần train lại:** dùng [`DockBench_Inference.ipynb`](DockBench_Inference.ipynb) trên Colab/Kaggle — clone repo + trỏ tới thư mục `results/` đã tải (ô cấu hình `RESULTS_*` trong notebook).
 
 ---
 
@@ -211,7 +208,6 @@ python tools/plot_training_curves.py --models_dir results/models --plots_dir res
 code_docking/
 ├── README.md
 ├── requirements.txt
-├── DockBench_Inference.ipynb
 ├── dockbench/
 ├── scripts/00_download.sh, run_training.sh
 ├── tools/

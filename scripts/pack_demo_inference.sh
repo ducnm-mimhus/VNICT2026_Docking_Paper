@@ -1,6 +1,7 @@
 #!/bin/bash
 # Pack 1–2 CrossDock complexes for Kaggle demo.
-# Usage: bash scripts/pack_demo_inference.sh 4kqp 2ydt
+# Usage: bash scripts/pack_demo_inference.sh 3zsx 4eky
+# (must exist in data/types/ref_uff_test0.types — not train-only IDs like 4kqp)
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -36,4 +37,6 @@ for pdb in "$@"; do
   echo "${line}" >> "${OUT}/types/demo.types"
   echo "OK ${pdb}"
 done
+echo ""
+echo "Output: ${OUT}/"
 du -sh "${OUT}"

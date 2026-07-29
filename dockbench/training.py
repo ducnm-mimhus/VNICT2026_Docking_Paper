@@ -1527,7 +1527,7 @@ def training(args):
 
         @trainer.on(Events.EPOCH_COMPLETED(every=args.test_every))
         def log_test_results(trainer):
-            nonlocal best_score, bad_eval_count
+            nonlocal best_score, bad_eval_count, best_epoch, best_metrics
             _close_iter_bar_if_open()
             test_evaluator.run(test_loader)
             for outstream in outstreams:

@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# MLflow tracking artifacts (created wherever training.py is run from)
+mlflow.db
+mlruns/
+
+# Large data / results — not meant for git (checkpoints, downloaded structures)
+data/
+results/

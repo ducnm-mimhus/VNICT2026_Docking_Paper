@@ -1,0 +1,66 @@
+==========================================
+DATASET REPORT
+==========================================
+Dataset name: CrossDocked2020 / PDBbind2016 (Francoeur2020 split)
+Data root:    data
+Train types:  data/types/ref_uff_train0.types
+Test types:   data/types/ref_uff_test0.types
+
+Task description:
+  - Pose classification: label column 0, 1=good pose, 0=bad pose.
+  - Affinity prediction: affinity column 1, evaluated on good/positive affinities.
+  - Screening metrics: predictions are ranked by predicted affinity; positives use target affinity > 0.
+
+Split statistics:
+  train:
+    samples:          62335
+    pose bad/good:    54577 / 7758
+    affinity +/-/0:   7758 / 54577 / 0
+    affinity range:   min=-11.9200, mean=-4.7551, max=11.9200
+    .gninatypes refs: 124670
+  test:
+    samples:          4618
+    pose bad/good:    3995 / 623
+    affinity +/-/0:   623 / 3995 / 0
+    affinity range:   min=-11.8200, mean=-4.4994, max=11.8200
+    .gninatypes refs: 9236
+
+Voxel/grid description:
+  dimension:  23.5 Angstrom
+  resolution: 0.5 Angstrom
+  molgrid provider size: 62335
+  molgrid labels:        3
+  molgrid channels:      28
+  grid dimensions:       (28, 48, 48, 48)
+
+Channel names:
+  source: molgrid provider API
+  [00] 0_AliphaticCarbonXSHydrophobe
+  [01] 0_AliphaticCarbonXSNonHydrophobe
+  [02] 0_AromaticCarbonXSHydrophobe
+  [03] 0_AromaticCarbonXSNonHydrophobe
+  [04] 0_Bromine_Iodine_Chlorine_Fluorine
+  [05] 0_Nitrogen_NitrogenXSAcceptor
+  [06] 0_NitrogenXSDonor_NitrogenXSDonorAcceptor
+  [07] 0_Oxygen_OxygenXSAcceptor
+  [08] 0_OxygenXSDonorAcceptor_OxygenXSDonor
+  [09] 0_Sulfur_SulfurAcceptor
+  [10] 0_Phosphorus
+  [11] 0_Calcium
+  [12] 0_Zinc
+  [13] 0_GenericMetal_Boron_Manganese_Magnesium_Iron
+  [14] 1_AliphaticCarbonXSHydrophobe
+  [15] 1_AliphaticCarbonXSNonHydrophobe
+  [16] 1_AromaticCarbonXSHydrophobe
+  [17] 1_AromaticCarbonXSNonHydrophobe
+  [18] 1_Bromine_Iodine
+  [19] 1_Chlorine
+  [20] 1_Fluorine
+  [21] 1_Nitrogen_NitrogenXSAcceptor
+  [22] 1_NitrogenXSDonor_NitrogenXSDonorAcceptor
+  [23] 1_Oxygen_OxygenXSAcceptor
+  [24] 1_OxygenXSDonorAcceptor_OxygenXSDonor
+  [25] 1_Sulfur_SulfurAcceptor
+  [26] 1_Phosphorus
+  [27] 1_GenericMetal_Boron_Manganese_Magnesium_Zinc_Calcium_Iron
+==========================================

@@ -1,0 +1,98 @@
+{
+  "total_samples": 66953,
+  "splits": [
+    {
+      "split": "test",
+      "samples": 4618,
+      "unique_complexes": 280,
+      "missing_path_refs": 0,
+      "rows_with_all_paths_resolved": 4618,
+      "percent": 6.897375771063283
+    },
+    {
+      "split": "train",
+      "samples": 62335,
+      "unique_complexes": 3525,
+      "missing_path_refs": 0,
+      "rows_with_all_paths_resolved": 62335,
+      "percent": 93.10262422893672
+    }
+  ],
+  "pose_labels": [
+    {
+      "split": "test",
+      "pose_label": 0,
+      "samples": 3995,
+      "percent_within_split": 86.50931139021222
+    },
+    {
+      "split": "test",
+      "pose_label": 1,
+      "samples": 623,
+      "percent_within_split": 13.490688609787787
+    },
+    {
+      "split": "train",
+      "pose_label": 0,
+      "samples": 54577,
+      "percent_within_split": 87.55434346675223
+    },
+    {
+      "split": "train",
+      "pose_label": 1,
+      "samples": 7758,
+      "percent_within_split": 12.445656533247774
+    }
+  ],
+  "affinity": [
+    {
+      "split": "test",
+      "count": 4618.0,
+      "mean": -4.499443482026852,
+      "std": 4.777695018770722,
+      "min": -11.82,
+      "25%": -7.32,
+      "median": -5.77,
+      "75%": -3.62,
+      "max": 11.82
+    },
+    {
+      "split": "train",
+      "count": 62335.0,
+      "mean": -4.755074035453598,
+      "std": 4.642567657756925,
+      "min": -11.92,
+      "25%": -7.58,
+      "median": -6.0,
+      "75%": -4.0,
+      "max": 11.92
+    }
+  ],
+  "rmsd": [],
+  "unique_complexes_total": 3805,
+  "complex_overlap": [
+    {
+      "category": "train_only",
+      "unique_complexes": 3525
+    },
+    {
+      "category": "test_only",
+      "unique_complexes": 280
+    },
+    {
+      "category": "in_both",
+      "unique_complexes": 0
+    }
+  ],
+  "duplicate_raw_rows": 0,
+  "missing_path_refs": 0,
+  "inputs": {
+    "train_file": "/root/working/KhoaLuan/gnina-torch-main/examples/Francoeur2020/data/types/ref_uff_train0.types",
+    "test_file": "/root/working/KhoaLuan/gnina-torch-main/examples/Francoeur2020/data/types/ref_uff_test0.types",
+    "project_root": "/root/working/KhoaLuan/gnina-torch-main",
+    "data_root": "/root/working/KhoaLuan/gnina-torch-main/examples/Francoeur2020/data",
+    "label_pos": 0,
+    "affinity_pos": 1,
+    "rmsd_pos": null
+  }
+}

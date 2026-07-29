@@ -7,6 +7,10 @@ __pycache__/
 mlflow.db
 mlruns/
 
-# Large data / results — not meant for git (checkpoints, downloaded structures)
+# Downloaded structure data (~80GB) — never meant for git
 data/
-results/
+
+# Large binary model checkpoints (~443MB across 6-7 models) — not meant for git.
+# Logs, CSVs, audit reports, and plots under results/ ARE tracked — they are
+# small (<40MB total) and useful as a record of what each run actually produced.
+results/models/*/*.pt

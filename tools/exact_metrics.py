@@ -21,6 +21,8 @@ import math
 from pathlib import Path
 from typing import List, Tuple
 
+import numpy as np
+
 
 def read_predictions(path: Path) -> Tuple[List[int], List[float], List[float], List[float]]:
     labels, aff_true, p_good, aff_pred = [], [], [], []
@@ -33,22 +35,37 @@ def read_predictions(path: Path) -> Tuple[List[int], List[float], List[float], L
     return labels, aff_true, p_good, aff_pred
 
 
-def exact_concordance_index(pred: List[float], target: List[float]) -> Tuple[float, int]:
-    """C-index tinh tren TOAN BO cap (i,j), target[i] != target[j]. O(N^2)."""
-    n = len(pred)
+def exact_concordance_index(
+    pred: List[float], target: List[float], chunk_size: int = 512,
+) -> Tuple[float, int]:
+    """
+    C-index tinh tren TOAN BO cap (i,j), target[i] != target[j].
+
+    Vector hoa bang numpy, xu ly theo tung chunk hang de gioi han bo nho voi
+    N lon (tap test day du ~4.6k mau: ban pure-Python truoc day mat ~1.6s/lan,
+    tuc ~54 phut cho 2000 lan resample trong paired_bootstrap.py — qua cham
+    de dung thuc te. Ban numpy nay nhanh hon ~2-3 bac do.
+    """
+    p = np.asarray(pred, dtype=np.float64)
+    t = np.asarray(target, dtype=np.float64)
+    n = len(p)
+    if n < 2:
+        return 0.5, 0
+
     concordant = 0.0
     n_pairs = 0
-    for i in range(n):
-        for j in range(i + 1, n):
-            yd = target[i] - target[j]
-            if abs(yd) < 1e-9:
-                continue
-            n_pairs += 1
-            pd_ = pred[i] - pred[j]
-            if yd * pd_ > 0:
-                concordant += 1.0
-            elif abs(pd_) < 1e-9:
-                concordant += 0.5
+    idx_all = np.arange(n)
+    for start in range(0, n, chunk_size):
+        end = min(start + chunk_size, n)
+        t_diff = t[start:end, None] - t[None, :]          # [chunk, N]
+        p_diff = p[start:end, None] - p[None, :]          # [chunk, N]
+        upper = idx_all[None, :] > idx_all[start:end, None]  # moi cap (i,j) dem 1 lan
+        valid = upper & (np.abs(t_diff) > 1e-9)
+        conc = valid & ((t_diff * p_diff) > 0)
+        tie = valid & (np.abs(p_diff) < 1e-9)
+        concordant += float(conc.sum()) + 0.5 * float(tie.sum())
+        n_pairs += int(valid.sum())
+
     if n_pairs == 0:
         return 0.5, 0
     return concordant / n_pairs, n_pairs

@@ -29,6 +29,12 @@ RESULTS_DIR="${PROJECT_DIR}/results"
 LOGS_DIR="${RESULTS_DIR}/logs"
 MODELS_DIR="${RESULTS_DIR}/models"
 
+# cd vao PROJECT_DIR (khong chi export PYTHONPATH): `python -m dockbench.training`
+# tu dua CWD vao dau sys.path, nen day la lop phong ve thu 2 doc lap voi
+# PYTHONPATH — tranh loi "ModuleNotFoundError: No module named 'dockbench'"
+# neu PYTHONPATH bi mot co che nao khac (vd cau hinh may lab dung chung) ghi de.
+cd "${PROJECT_DIR}"
+
 export PYTHONPATH="${PROJECT_DIR}:${PYTHONPATH:-}"
 export GIT_PYTHON_REFRESH=quiet
 export PYTHONWARNINGS="ignore::DeprecationWarning"

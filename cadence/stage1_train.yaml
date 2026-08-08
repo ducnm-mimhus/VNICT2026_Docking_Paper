@@ -1,0 +1,63 @@
+working_dir: .
+description: "GeoFormerDock — tai data, smoke test tren GPU thuc, roi chay B1+B2 (ablation)"
+
+cmd:
+  - |-
+    set -e
+    echo "=== 1. Kiem tra dia truoc khi tai 80GB ==="
+    df -h .
+
+    echo "=== 2. Tai du lieu (PDBbind2016 + .types) ==="
+    bash scripts/00_download.sh
+    ls data/types/ref_uff_train0.types data/types/ref_uff_test0.types
+
+    echo "=== 3. Smoke test TREN GPU THAT (khac mac dinh CPU) ==="
+    SMOKETEST_DEVICE=cuda:0 bash scripts/run_geoformerdock_ablations.sh smoketest
+    python3 -c "
+    import json
+    d = json.load(open('results/models/geoformerdock_smoketest/summary.json'))
+    assert d.get('best_epoch') is not None, 'FIX nonlocal khong hoat dong tren may nay!'
+    print('Smoke test tren GPU: OK, best_epoch =', d['best_epoch'])
+    "
+    rm -rf results/models/geoformerdock_smoketest results/logs/geoformerdock_smoketest.log
+
+    echo "=== 4. B1 + B2 (moi cai ~1 ngay GPU voi epoch=100 mac dinh) ==="
+    bash scripts/run_geoformerdock_ablations.sh both
+
+    echo "=== 5. A2 — khong can data, chay lai cho ca B1/B2 ==="
+    python3 tools/select_epoch_by_train.py
+
+    echo "=== DONE stage 1 ==="
+
+provisioning:
+  gpu_type: l40s      # 32GB vRAM, ~1.55 USD/h — du cho model 1.6M tham so, batch_size=1024
+  gpu_count: 1
+  cpu_count: 8
+  ram: 32
+
+env:
+  variables:
+    PYTHONUNBUFFERED: "1"
+  python:
+    version: "3.10"
+    pip:
+      requirements_path: requirements.txt
+
+project_sync:
+  local:
+    root: .
+    storage_name: Cadence Storage
+    uri: ""
+    # data/ rat nang (~80GB) va se duoc TAI LAI tren may cloud o buoc 2 — khong sync tu local.
+    # results/models/*/*.pt cung khong sync len (chua co gi dang tai giai doan nay).
+    exclude: ["data/**", "results/models/*/*.pt", "results/predictions/**"]
+    storage_type: DEFAULT
+
+outputs:
+  # Chi day len phan NHE: checkpoint B1/B2 (vai chuc MB) + log/csv/tsv.
+  # KHONG day data/ (80GB) len lai — qua ton, va Stage 2 se tu tai rieng.
+  - type: OUTPUT
+    storage_name: Cadence Storage
+    uri: "geoformerdock-stage1"
+    path: results
+    storage_type: DEFAULT

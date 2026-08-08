@@ -1,0 +1,111 @@
+working_dir: .
+description: "Inference + A1 (exact metrics) + paired bootstrap tren 4-6 checkpoint"
+
+# TRUOC KHI CHAY STAGE NAY:
+#   1. Da co it nhat 3 file bat buoc trong local repo (tai tu Drive theo
+#      docs/handoff_runbook.md muc 3.5):
+#        results/models/gnina_dense/best_model.pt
+#        results/models/gnina_default2018/best_model.pt
+#        results/models/pafnucy/best_model.pt
+#   2. (Khuyen nghi) results/models/geoformerdock/best_model.pt (Drive, tuy chon)
+#   3. (Khuyen nghi) sau khi Stage 1 xong: chay
+#        cadence execution download <STAGE1_EXECUTION_ID> --to ./stage1_out
+#      roi copy thu muc ket qua vao dung cho:
+#        stage1_out/results/models/geoformerdock_uncertainty/  -> results/models/geoformerdock_uncertainty/
+#        stage1_out/results/models/geoformerdock_nobalance/    -> results/models/geoformerdock_nobalance/
+#   Cac file .pt nay deu nho (vai chuc MB) nen project_sync mac dinh se tu day len,
+#   KHONG can co che inputs/S3 rieng.
+
+cmd:
+  - |-
+    set -e
+    echo "=== 1. Tai lai data/ (Stage nay chay tren may/execution khac Stage 1) ==="
+    bash scripts/00_download.sh
+    ls data/types/ref_uff_test0.types
+
+    echo "=== 2. Inference cho cac model co checkpoint (tu dong bo qua model thieu) ==="
+    DEVICE=cuda:0 bash scripts/run_all_inference.sh
+
+    echo "=== 3. Inference rieng cho B1/B2 neu checkpoint co mat ==="
+    if [ -f results/models/geoformerdock_uncertainty/best_model.pt ]; then
+        python3 tools/run_inference.py --model geoformerdock --uncertainty \
+            --checkpoint results/models/geoformerdock_uncertainty/best_model.pt \
+            --testfile data/types/ref_uff_test0.types --data_root data -g cuda:0 \
+            --out results/predictions/geoformerdock_uncertainty.csv
+    else
+        echo "[SKIP] khong co results/models/geoformerdock_uncertainty/best_model.pt"
+    fi
+    if [ -f results/models/geoformerdock_nobalance/best_model.pt ]; then
+        python3 tools/run_inference.py --model geoformerdock \
+            --checkpoint results/models/geoformerdock_nobalance/best_model.pt \
+            --testfile data/types/ref_uff_test0.types --data_root data -g cuda:0 \
+            --out results/predictions/geoformerdock_nobalance.csv
+    else
+        echo "[SKIP] khong co results/models/geoformerdock_nobalance/best_model.pt"
+    fi
+
+    echo "=== 4. A1 — chi so chinh xac cho tung model ==="
+    for f in results/predictions/*.csv; do
+        echo "--- $f ---"
+        python3 tools/exact_metrics.py --predictions "$f"
+    done | tee results/logs/exact_metrics_all.log
+
+    echo "=== 5. Paired bootstrap CI (VD4a) — bat buoc: gnina_dense, gnina_default2018, pafnucy ==="
+    mkdir -p results/logs
+    : > results/logs/paired_bootstrap_all.log
+    MANDATORY_BASELINES=(gnina_dense gnina_default2018 pafnucy)
+    OPTIONAL_BASELINES=(potentialnet tankbind)
+    MISSING_MANDATORY=0
+    for baseline in "${MANDATORY_BASELINES[@]}" "${OPTIONAL_BASELINES[@]}"; do
+        PRED_B="results/predictions/${baseline}.csv"
+        if [ ! -f "${PRED_B}" ]; then
+            if [[ " ${MANDATORY_BASELINES[*]} " == *" ${baseline} "* ]]; then
+                echo "[LOI] Thieu ${PRED_B} — baseline BAT BUOC theo D1." >&2
+                MISSING_MANDATORY=1
+            else
+                echo "=== geoformerdock vs ${baseline}: [SKIP] (tuy chon) ===" | tee -a results/logs/paired_bootstrap_all.log
+            fi
+            continue
+        fi
+        echo "=== geoformerdock vs ${baseline} ===" | tee -a results/logs/paired_bootstrap_all.log
+        python3 tools/paired_bootstrap.py \
+            --pred_a results/predictions/geoformerdock.csv \
+            --pred_b "${PRED_B}" \
+            --metric all --n_boot 2000 --seed 2026 \
+            | tee -a results/logs/paired_bootstrap_all.log
+    done
+    if [ "${MISSING_MANDATORY}" = "1" ]; then
+        echo "CANH BAO: thieu baseline bat buoc, xem log o tren." >&2
+    fi
+
+    echo "=== DONE stage 2 ==="
+
+provisioning:
+  gpu_type: t4        # inference/metrics nhe, khong can GPU manh; van dung GPU cho nhanh hon CPU
+  gpu_count: 1
+  cpu_count: 4
+  ram: 16
+
+env:
+  variables:
+    PYTHONUNBUFFERED: "1"
+  python:
+    version: "3.10"
+    pip:
+      requirements_path: requirements.txt
+
+project_sync:
+  local:
+    root: .
+    storage_name: Cadence Storage
+    uri: ""
+    # data/ (80GB) duoc tai LAI ngay tren may cloud (buoc 1 trong cmd) — khong sync tu local.
+    exclude: ["data/**"]
+    storage_type: DEFAULT
+
+outputs:
+  - type: OUTPUT
+    storage_name: Cadence Storage
+    uri: "geoformerdock-stage2"
+    path: results
+    storage_type: DEFAULT

@@ -100,6 +100,39 @@ rm -rf results/models/geoformerdock_smoketest results/logs/geoformerdock_smokete
 
 ---
 
+## 3.5. Tải checkpoint cũ từ Drive + kiểm tra sanity (THAY CHO việc train lại 6 mô hình gốc)
+
+**D0 đã chốt:** dùng lại checkpoint cũ (đã lưu trên Drive), không train lại từ đầu 6 mô hình
+gốc. **D1 đã chốt: bỏ 3 baseline đồ thị** (`equibind`, `tankbind`, `potentialnet`) khỏi bảng
+kết quả chính (VĐ1) — vì cả ba cho kết quả ≈ ngẫu nhiên do lỗi kỹ thuật không sửa được khi port
+sang voxel (tọa độ pseudo-atom không khả vi). Hệ quả: **không cần train `equibind`**.
+
+**Bước 1 — Tải 3 file `best_model.pt` cần cho bảng chính** từ Drive, đặt đúng đường dẫn:
+```
+results/models/gnina_dense/best_model.pt
+results/models/gnina_default2018/best_model.pt
+results/models/pafnucy/best_model.pt
+```
+(Tùy chọn, không bắt buộc: `tankbind/best_model.pt`, `potentialnet/best_model.pt` — chỉ nếu
+muốn giữ làm minh chứng phụ lục cho VĐ1, KHÔNG đưa vào bảng chính. `geoformerdock/best_model.pt`
+cũng tải nếu muốn có dòng đối chứng trước khi B1/B2 chạy xong.)
+
+⚠️ **KHÔNG tải/dùng `summary.json` đi kèm trên Drive** (nếu có) — số liệu đó được ghi bằng code
+cũ có lỗi tracking `best_epoch` (VĐ11), không đáng tin. Chỉ dùng file `.pt`; mọi chỉ số phải
+tính lại từ đầu ở bước 5–6 dưới đây.
+
+**Bước 2 — Sanity-check ngay sau khi tải, TRƯỚC khi tin bất kỳ số nào:**
+```bash
+python3 tools/inspect_checkpoints.py
+```
+Kỳ vọng: `status: ok` cho cả 3-4 model đã tải, và **cùng một giá trị `pi_implied`** (≈0.135) ở
+mọi dòng — đây chính là phép kiểm `Acc = π·Rpos + (1−π)·Rneg` đã dùng để phát hiện VĐ11 lần
+đầu. Nếu `pi_implied` lệch nhau giữa các dòng, hoặc `status` báo lỗi đọc file — **dừng lại**,
+checkpoint tải về có thể bị hỏng hoặc không khớp `ref_uff_test0.types` hiện tại (ví dụ tải nhầm
+từ một lần chạy với split khác). Báo lại trước khi chạy tiếp bước 4.
+
+---
+
 ## 4. Chạy B1, B2 (ablation — mỗi cái ~1 ngày GPU với epoch=100 mặc định)
 
 ```bash
@@ -119,7 +152,7 @@ dòng khác trong bảng.
 
 ---
 
-## 5. Chạy inference lấy dự đoán từng mẫu (cho 6 model đã có checkpoint)
+## 5. Chạy inference lấy dự đoán từng mẫu
 
 ```bash
 bash scripts/run_all_inference.sh
@@ -130,9 +163,11 @@ Mặc định dùng `data/types/ref_uff_test0.types` + GPU. Nếu máy không c�
 DEVICE=cpu bash scripts/run_all_inference.sh
 ```
 
-Kết quả: `results/predictions/<model>.csv` cho 6 model (`gnina_dense, gnina_default2018,
-pafnucy, potentialnet, tankbind, geoformerdock`). **`equibind` bị bỏ qua** — không có
-`best_model.pt` (đã xác nhận từ trước, không phải lỗi của script).
+Kết quả: `results/predictions/<model>.csv`. Theo **D1 = bỏ 3 baseline đồ thị**, chỉ 4 model sau
+là bắt buộc cho bảng chính: `gnina_dense, gnina_default2018, pafnucy, geoformerdock`.
+`potentialnet`, `tankbind` là **tùy chọn** (chỉ chạy nếu muốn giữ làm minh chứng phụ lục cho
+VĐ1 — không đưa số của chúng vào Bảng kết quả chính Mục IV). `equibind` bị bỏ hẳn theo D1,
+không cần checkpoint, không cần chạy.
 
 **Nếu muốn có dự đoán cho B1/B2** (sau khi bước 4 xong), chạy thêm thủ công:
 ```bash

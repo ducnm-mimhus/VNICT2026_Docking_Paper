@@ -125,11 +125,14 @@ tính lại từ đầu ở bước 5–6 dưới đây.
 ```bash
 python3 tools/inspect_checkpoints.py
 ```
-Kỳ vọng: `status: ok` cho cả 3-4 model đã tải, và **cùng một giá trị `pi_implied`** (≈0.135) ở
-mọi dòng — đây chính là phép kiểm `Acc = π·Rpos + (1−π)·Rneg` đã dùng để phát hiện VĐ11 lần
-đầu. Nếu `pi_implied` lệch nhau giữa các dòng, hoặc `status` báo lỗi đọc file — **dừng lại**,
-checkpoint tải về có thể bị hỏng hoặc không khớp `ref_uff_test0.types` hiện tại (ví dụ tải nhầm
-từ một lần chạy với split khác). Báo lại trước khi chạy tiếp bước 4.
+Kỳ vọng: `status: ok` cho **đúng những model đã tải** (3 bắt buộc + bao nhiêu tùy chọn đã tải),
+và **cùng một giá trị `pi_implied`** (≈0.135) ở mọi dòng `ok` — đây chính là phép kiểm
+`Acc = π·Rpos + (1−π)·Rneg` đã dùng để phát hiện VĐ11 lần đầu. `[MISSING]` cho `equibind` và
+cho bất kỳ model tùy chọn nào bạn chưa tải là **bình thường, không phải lỗi** — script quét cả
+7 model theo mặc định. Chỉ coi là lỗi nếu `[MISSING]` xuất hiện ở 1 trong 3 model **bắt buộc**
+(`gnina_dense, gnina_default2018, pafnucy`), hoặc nếu `pi_implied` lệch nhau giữa các dòng `ok`
+— khi đó **dừng lại**, checkpoint tải về có thể bị hỏng hoặc không khớp `ref_uff_test0.types`
+hiện tại (ví dụ tải nhầm từ một lần chạy với split khác). Báo lại trước khi chạy tiếp bước 4.
 
 ---
 
@@ -203,16 +206,40 @@ mẫu ngẫu nhiên** hiện có trong `training_metrics_test.csv` (VĐ4b).
 
 ## 7. Paired bootstrap CI (VĐ4a) — so sánh mô hình đề xuất với từng baseline
 
+`gnina_dense, gnina_default2018, pafnucy` là **bắt buộc** (D1). `potentialnet, tankbind` là
+**tùy chọn** — script dưới đây tự bỏ qua nếu thiếu file dự đoán, không dừng cả vòng lặp:
+
 ```bash
 mkdir -p results/logs
-for baseline in gnina_dense gnina_default2018 pafnucy potentialnet tankbind; do
+: > results/logs/paired_bootstrap_all.log
+MANDATORY_BASELINES=(gnina_dense gnina_default2018 pafnucy)
+OPTIONAL_BASELINES=(potentialnet tankbind)
+MISSING_MANDATORY=0
+
+for baseline in "${MANDATORY_BASELINES[@]}" "${OPTIONAL_BASELINES[@]}"; do
+    PRED_B="results/predictions/${baseline}.csv"
+    if [ ! -f "${PRED_B}" ]; then
+        if [[ " ${MANDATORY_BASELINES[*]} " == *" ${baseline} "* ]]; then
+            echo "[LOI] Thieu ${PRED_B} — day la baseline BAT BUOC theo D1. Kiem tra lai buoc 3.5/5." >&2
+            MISSING_MANDATORY=1
+        else
+            echo "=== geoformerdock vs ${baseline}: [SKIP] khong co ${PRED_B} (baseline tuy chon) ===" \
+                | tee -a results/logs/paired_bootstrap_all.log
+        fi
+        continue
+    fi
     echo "=== geoformerdock vs ${baseline} ===" | tee -a results/logs/paired_bootstrap_all.log
     python3 tools/paired_bootstrap.py \
         --pred_a results/predictions/geoformerdock.csv \
-        --pred_b "results/predictions/${baseline}.csv" \
+        --pred_b "${PRED_B}" \
         --metric all --n_boot 2000 --seed 2026 \
         | tee -a results/logs/paired_bootstrap_all.log
 done
+
+if [ "${MISSING_MANDATORY}" = "1" ]; then
+    echo "DUNG LAI: thieu it nhat 1 baseline bat buoc — xem [LOI] o tren." >&2
+    exit 1
+fi
 ```
 
 Nếu script in cảnh báo `"hai file co ve KHONG cung hang/cung testfile"` — **dừng lại**, đây là
@@ -239,7 +266,8 @@ python3 tools/select_epoch_by_train.py
 ```
 results/models/geoformerdock_uncertainty/     (toàn bộ thư mục — B1)
 results/models/geoformerdock_nobalance/       (toàn bộ thư mục — B2)
-results/predictions/*.csv                     (7-8 file, bước 5)
+results/predictions/*.csv                     (4-8 file tuy da tai baseline tuy chon
+                                                chua va B1/B2 xong chua — buoc 5)
 results/logs/exact_metrics_all.log            (bước 6)
 results/logs/paired_bootstrap_all.log         (bước 7)
 results/logs/epoch_selection_audit.tsv        (cập nhật nếu chạy lại ở bước 8)

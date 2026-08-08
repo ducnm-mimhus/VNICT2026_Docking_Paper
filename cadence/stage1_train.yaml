@@ -21,7 +21,20 @@ cmd:
     "
     rm -rf results/models/geoformerdock_smoketest results/logs/geoformerdock_smoketest.log
 
-    echo "=== 4. B1 + B2 (moi cai ~1 ngay GPU voi epoch=100 mac dinh) ==="
+    echo "=== 3b. Kiem tra OOM + nhanh --uncertainty tren DATA THAT (5 epoch, ~5 phut) ==="
+    echo "  Epoch 5 la lan dau L_aff (co UncertaintyHead) duoc backward thuc su,"
+    echo "  vi pose_only_epochs=4 co dinh trong script — duoi 5 epoch se khong test duoc gi."
+    EPOCHS=5 TEST_EVERY=1 bash scripts/run_geoformerdock_ablations.sh uncertainty
+    python3 -c "
+    import json, math
+    d = json.load(open('results/models/geoformerdock_uncertainty/summary.json'))
+    mae = d.get('final_mae')
+    assert mae is not None and not math.isnan(mae), 'NaN/loi phat hien trong 5 epoch dau — DUNG LAI, kiem tra log truoc khi chay full 100 epoch'
+    print('Kiem tra OOM + uncertainty (5 epoch): OK, final_mae =', mae)
+    "
+    rm -rf results/models/geoformerdock_uncertainty results/logs/geoformerdock_uncertainty.log
+
+    echo "=== 4. B1 + B2 FULL (moi cai ~1.5-2 gio voi epoch=100 mac dinh, da do tu log thuc te) ==="
     bash scripts/run_geoformerdock_ablations.sh both
 
     echo "=== 5. A2 — khong can data, chay lai cho ca B1/B2 ==="
@@ -53,7 +66,17 @@ project_sync:
     # mlflow.db/mlruns/: NEU con tren may local (vd tu lan chay thu truoc), file nay
     # luu duong dan TUYET DOI cua may local lam artifact root — dong bo len cloud se
     # gay "PermissionError" khi mlflow co ghi vao duong dan khong ton tai o may khac.
-    exclude: ["data/**", "results/models/*/*.pt", "results/predictions/**", "mlflow.db", "mlruns/**"]
+    exclude:
+      - "data/**"
+      - "results/models/*/*.pt"
+      - "results/predictions/**"
+      - "mlflow.db"
+      - "mlruns/**"
+      - "**/__pycache__/**"
+      - "**/*.pyc"
+      - "logs/**"
+      - "errors/**"
+      - ".idea/**"
     storage_type: DEFAULT
 
 outputs:

@@ -48,9 +48,12 @@ project_sync:
     root: .
     storage_name: Cadence Storage
     uri: ""
-    # data/ rat nang (~80GB) va se duoc TAI LAI tren may cloud o buoc 2 — khong sync tu local.
+    # data/ rat nang va se duoc TAI LAI tren may cloud o buoc 2 — khong sync tu local.
     # results/models/*/*.pt cung khong sync len (chua co gi dang tai giai doan nay).
-    exclude: ["data/**", "results/models/*/*.pt", "results/predictions/**"]
+    # mlflow.db/mlruns/: NEU con tren may local (vd tu lan chay thu truoc), file nay
+    # luu duong dan TUYET DOI cua may local lam artifact root — dong bo len cloud se
+    # gay "PermissionError" khi mlflow co ghi vao duong dan khong ton tai o may khac.
+    exclude: ["data/**", "results/models/*/*.pt", "results/predictions/**", "mlflow.db", "mlruns/**"]
     storage_type: DEFAULT
 
 outputs:

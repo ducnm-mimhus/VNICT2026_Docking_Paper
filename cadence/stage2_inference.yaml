@@ -99,8 +99,11 @@ project_sync:
     root: .
     storage_name: Cadence Storage
     uri: ""
-    # data/ (80GB) duoc tai LAI ngay tren may cloud (buoc 1 trong cmd) — khong sync tu local.
-    exclude: ["data/**"]
+    # data/ duoc tai LAI ngay tren may cloud (buoc 1 trong cmd) — khong sync tu local.
+    # mlflow.db/mlruns/: co the luu duong dan tuyet doi cua may local, gay
+    # PermissionError khi mlflow co ghi vao duong dan do tren may cloud (da gap phai
+    # o Stage 1 — xem docs/cadence_runbook.md).
+    exclude: ["data/**", "mlflow.db", "mlruns/**"]
     storage_type: DEFAULT
 
 outputs:

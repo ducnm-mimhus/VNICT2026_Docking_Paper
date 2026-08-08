@@ -88,9 +88,12 @@ khi bắt đầu) để chạy `df -h .` — xác nhận máy cloud có đủ ch
 `docs/handoff_runbook.md` đã cảnh báo, chỉ khác là giờ kiểm tra trên máy cloud, không phải máy
 bạn.
 
-Thời gian ước tính: tải 80GB (vài chục phút tuỳ băng thông cloud, thường nhanh hơn máy cá
-nhân nhiều) + B1 + B2 (~1 ngày GPU mỗi cái, có thể chạy tuần tự trong 1 execution). **Tổng
-~2 ngày.** Chi phí ước tính ở §5.
+**Thời gian ước tính — đã sửa lại bằng số liệu thật** (bản trước ghi "~1 ngày/cái" là SAI, chỉ
+là suy đoán chưa kiểm tra log). Log huấn luyện gốc (`results/models/*/training.log`, cột
+`Elapsed Time` cuối cùng) cho thấy: 100 epoch của GeoFormerDock chỉ mất **1.52 giờ** thực tế
+(và các model khác cũng chỉ 1.5–2.1 giờ, không phụ thuộc nhiều vào số tham số). B1/B2 dùng
+đúng cấu hình đó (chỉ đổi 1 cờ), nên mỗi cái cũng nên mất **~1.5–2 giờ**, không phải 1 ngày.
+**Tổng Stage 1 ước tính ~4–5 giờ** (gồm cả tải data), không phải ~2 ngày. Chi phí ước tính ở §6.
 
 Khi xong, tải kết quả về máy bạn:
 ```bash
@@ -137,7 +140,9 @@ Stage này tải lại `data/` (chỉ để dùng cho inference trên tập test
 tải 2 lần thay vì giữ dữ liệu giữa 2 execution, vì băng thông cloud thường rẻ/nhanh hơn công
 sức dựng cơ chế S3 riêng cho việc này. Nếu muốn tránh tải lại, gộp Stage 1 + Stage 2 thành 1
 file `cmd` duy nhất — đánh đổi là nếu lỗi ở phần inference, phải chạy lại từ đầu cả phần B1/B2
-đã tốn ~2 ngày GPU. **Khuyến nghị giữ 2 stage riêng như hiện tại.**
+đã tốn ~4-5 giờ GPU. **Khuyến nghị giữ 2 stage riêng như hiện tại** — dù thời gian B1/B2 giờ
+biết là ngắn (không phải ~2 ngày như ước tính sai trước đó), tách stage vẫn an toàn hơn và chi
+phí tải lại chỉ thêm ~$1.
 
 Xong, tải kết quả:
 ```bash
@@ -161,13 +166,18 @@ A10G (24GB) — có thể là RAM hệ thống đi kèm, không phải vRAM GPU.
 quyết định — nếu OOM ở `l40s`, thử giảm `BATCH_SIZE` (biến môi trường đã hỗ trợ sẵn trong
 `scripts/run_geoformerdock_ablations.sh`) trước khi nhảy lên GPU đắt hơn.
 
-**Ước tính chi phí toàn bộ (2 stage):**
-- Stage 1: ~2 ngày × 24h × $1.55 ≈ **$74** (tính cả thời gian tải data, chiếm phần nhỏ)
-- Stage 2: vài giờ × $0.53–1.20 ≈ **dưới $5**
-- **Tổng ước tính: ~$75–80**, tức là **vượt $30 credit miễn phí** — cần chuẩn bị tinh thần trả
-  thêm tiền, hoặc rút ngắn epoch thử nghiệm trước (`EPOCHS=10 bash
-  scripts/run_geoformerdock_ablations.sh uncertainty`) để canh chi phí trước khi chạy full 100
-  epoch.
+**Ước tính chi phí toàn bộ (2 stage) — SỬA LẠI bằng số liệu thật từ log, không phải suy đoán:**
+
+Đối chiếu `Elapsed Time` cuối cùng trong `results/models/*/training.log` cho 5 model — toàn bộ
+100 epoch chỉ mất **1.5–2.1 giờ thật** (geoformerdock: 1.52h, pafnucy 8M tham số: 2.09h, không
+tỉ lệ mạnh theo số tham số). B1/B2 dùng đúng cấu hình đó, nên ước tính tương tự:
+
+- Stage 1: tải data (~1h, chưa có số thật) + B1 (~1.5-2h) + B2 (~1.5-2h) ≈ **4-5h** × $1.55/h
+  ≈ **$6.2-7.8**
+- Stage 2: tải lại data (~1h) + inference + bootstrap (~1h) ≈ **2h** × $0.53/h ≈ **~$1.1**
+- **Tổng ước tính: ~$7.3-8.9** — nằm trong $30 credit miễn phí, kể cả phải chạy lại 1 lần do
+  lỗi. Vẫn nên bật `cadence execution status`/dashboard billing để theo dõi thực tế, vì thời
+  gian tải 80GB chưa có số đo thật (mới chỉ có số đo cho phần train).
 
 ---
 

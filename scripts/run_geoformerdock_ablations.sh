@@ -54,7 +54,10 @@ WEIGHT_DECAY="${WEIGHT_DECAY:-0.01}"
 TEST_EVERY="${TEST_EVERY:-2}"
 RANKING_NUM_PAIRS="${RANKING_NUM_PAIRS:-128}"
 HARD_NEG_FRACTION="${HARD_NEG_FRACTION:-0.3}"
-BATCH_SIZE="${BATCH_SIZE:-1024}"
+# 1024 la mac dinh cua run_training.sh, nhung DA XAC NHAN OOM tren GPU 44.39GB vRAM
+# thuc (l40s) — grid voxel 48^3 qua nang. Mac dinh o day giam xuong 256; neu chay
+# tren GPU lon hon (>=80GB thuc) co the nang len 1024 de khop chinh xac baseline.
+BATCH_SIZE="${BATCH_SIZE:-256}"
 GEOFORMER_MAX_PSEUDO_ATOMS="${GEOFORMER_MAX_PSEUDO_ATOMS:-12}"
 SCALE_RANKING="${SCALE_RANKING:-0.05}"
 

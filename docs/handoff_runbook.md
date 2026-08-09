@@ -1,13 +1,46 @@
 # Runbook Bàn giao — Chạy trên Data Đầy đủ (GPU + `data/`)
 
 **Mục tiêu:** tài liệu này là **tất cả những gì người được giao việc cần**, để chạy trọn phần
-còn lại của kế hoạch (B1, B2, inference, A1, paired bootstrap) mà **không cần hỏi lại** người
-đã chuẩn bị. Toàn bộ script trong runbook này đã được viết và kiểm thử end-to-end (bằng
-checkpoint thật + `demo_inference`) trước khi bàn giao — chỉ chưa chạy được trên dữ liệu đầy
-đủ vì máy chuẩn bị không đủ dung lượng (~80GB).
+còn lại của kế hoạch (inference, A1, paired bootstrap) mà **không cần hỏi lại** người đã
+chuẩn bị. Toàn bộ script trong runbook này đã được viết và kiểm thử end-to-end.
 
 **Không cần đọc lại toàn bộ lịch sử dự án để làm theo runbook này** — chỉ cần làm đúng theo
 thứ tự các bước dưới.
+
+## ✅ TÌNH TRẠNG HIỆN TẠI — chỉ còn Bước 5, 6, 7 phải chạy
+
+**Train (Bước 4) đã xong hết cho TẤT CẢ model** — không chỉ B1/B2, mà cả 3 baseline bắt buộc
+(`gnina_dense`, `gnina_default2018`, `pafnucy`) và 2 baseline tùy chọn (`potentialnet`,
+`tankbind`) đều đã có checkpoint sẵn từ trước (huấn luyện hồi làm khóa luận). B1/B2 mới train
+thêm gần đây trên JetBrains Cadence (l40s, batch_size=256), log sạch (không NaN/lỗi/OOM),
+`best_epoch` đúng (62 và 42) sau khi đã sửa lỗi `nonlocal` trong `dockbench/training.py`.
+
+**→ Bỏ hẳn Bước 3.5 và Bước 4 trong runbook này — KHÔNG cần tải gì từ Drive, KHÔNG cần train
+gì cả.** Chỉ cần:
+1. Giải nén file `handoff_all_checkpoints.zip` (gửi kèm, ~153MB) vào đúng vị trí — file zip đã
+   giữ nguyên cấu trúc thư mục, chỉ cần giải nén ngay tại thư mục gốc repo:
+   ```
+   results/models/gnina_dense/best_model.pt (+ summary.json)
+   results/models/gnina_default2018/best_model.pt (+ summary.json)
+   results/models/pafnucy/best_model.pt (+ summary.json)
+   results/models/geoformerdock/best_model.pt (+ summary.json)
+   results/models/geoformerdock_uncertainty/best_model.pt (+ summary.json)   ← B1
+   results/models/geoformerdock_nobalance/best_model.pt (+ summary.json)    ← B2
+   results/models/potentialnet/best_model.pt (+ summary.json)   (tùy chọn, phụ lục)
+   results/models/tankbind/best_model.pt (+ summary.json)       (tùy chọn, phụ lục)
+   ```
+2. Làm **Bước 1 → 2 → 3** như bình thường (cài env, tải ~80GB data, smoke test) — máy nhận
+   việc là máy khác, chưa có gì, vẫn cần làm đủ 3 bước này để chắc môi trường đúng.
+3. **Bỏ qua Bước 3.5 và Bước 4** — đi thẳng từ Bước 3 → 5.
+4. Bước 5 (inference) sẽ tự chạy đủ cho mọi model vì checkpoint đã có sẵn.
+5. Bước 8 (A2) đã được sửa để tự quét luôn `geoformerdock_uncertainty`/`geoformerdock_nobalance`
+   (trước đó có lỗi nhỏ: script chỉ quét 7 model chuẩn, bỏ sót 2 ablation — đã fix trong
+   `tools/select_epoch_by_train.py`). Kết quả đã có sẵn ở `results/logs/epoch_selection_audit.tsv`
+   (đã cập nhật, có đủ 9 dòng kể cả 2 ablation, đã gửi kèm trong repo) — không cần chạy lại trừ
+   khi muốn double-check.
+
+**Việc CHƯA làm** (đây là toàn bộ phần còn lại, ~1-1.5h không tính thời gian tải data):
+Bước 5 (inference — 6-8 model), Bước 6 (A1), Bước 7 (paired bootstrap).
 
 ---
 
@@ -100,28 +133,28 @@ rm -rf results/models/geoformerdock_smoketest results/logs/geoformerdock_smokete
 
 ---
 
-## 3.5. Tải checkpoint cũ từ Drive + kiểm tra sanity (THAY CHO việc train lại 6 mô hình gốc)
+## 3.5. Giải nén checkpoint (đã gửi kèm) + kiểm tra sanity — KHÔNG cần Drive
 
-**D0 đã chốt:** dùng lại checkpoint cũ (đã lưu trên Drive), không train lại từ đầu 6 mô hình
-gốc. **D1 đã chốt: bỏ 3 baseline đồ thị** (`equibind`, `tankbind`, `potentialnet`) khỏi bảng
-kết quả chính (VĐ1) — vì cả ba cho kết quả ≈ ngẫu nhiên do lỗi kỹ thuật không sửa được khi port
-sang voxel (tọa độ pseudo-atom không khả vi). Hệ quả: **không cần train `equibind`**.
+**D0 đã chốt:** dùng lại checkpoint cũ, không train lại từ đầu 6 mô hình gốc. **D1 đã chốt: bỏ
+3 baseline đồ thị** (`equibind`, `tankbind`, `potentialnet`) khỏi bảng kết quả chính (VĐ1) — vì
+cả ba cho kết quả ≈ ngẫu nhiên do lỗi kỹ thuật không sửa được khi port sang voxel (tọa độ
+pseudo-atom không khả vi). Hệ quả: **không cần checkpoint `equibind`** (và thực tế cũng không
+train được — xem `results/logs/best_checkpoint_audit.tsv`, dòng `equibind` = `missing_checkpoint`).
 
-**Bước 1 — Tải 3 file `best_model.pt` cần cho bảng chính** từ Drive, đặt đúng đường dẫn:
+**Bước 1 — Giải nén `handoff_all_checkpoints.zip`** (đã gửi kèm cùng repo, ~153MB) ngay tại thư
+mục gốc repo — file zip giữ đúng cấu trúc `results/models/<model>/...`, tự đặt đúng chỗ:
+```bash
+unzip -o handoff_all_checkpoints.zip
 ```
-results/models/gnina_dense/best_model.pt
-results/models/gnina_default2018/best_model.pt
-results/models/pafnucy/best_model.pt
-```
-(Tùy chọn, không bắt buộc: `tankbind/best_model.pt`, `potentialnet/best_model.pt` — chỉ nếu
-muốn giữ làm minh chứng phụ lục cho VĐ1, KHÔNG đưa vào bảng chính. `geoformerdock/best_model.pt`
-cũng tải nếu muốn có dòng đối chứng trước khi B1/B2 chạy xong.)
+Đủ cả 8 model rồi (3 baseline bắt buộc + `geoformerdock` gốc + B1 + B2 + 2 baseline tùy chọn) —
+**không cần tải gì thêm từ Drive**.
 
-⚠️ **KHÔNG tải/dùng `summary.json` đi kèm trên Drive** (nếu có) — số liệu đó được ghi bằng code
-cũ có lỗi tracking `best_epoch` (VĐ11), không đáng tin. Chỉ dùng file `.pt`; mọi chỉ số phải
-tính lại từ đầu ở bước 5–6 dưới đây.
+⚠️ **KHÔNG dùng `summary.json` đi kèm để trích số liệu cuối cùng** — những file này (trừ 2 file
+của B1/B2, đã được tính lại đúng) được ghi bằng code cũ có lỗi tracking `best_epoch` (VĐ11),
+không đáng tin. Chỉ dùng để tham khảo nhanh; mọi chỉ số dùng cho bài báo phải tính lại từ đầu ở
+Bước 5–6 dưới đây.
 
-**Bước 2 — Sanity-check ngay sau khi tải, TRƯỚC khi tin bất kỳ số nào:**
+**Bước 2 — Sanity-check ngay sau khi giải nén, TRƯỚC khi tin bất kỳ số nào:**
 ```bash
 python3 tools/inspect_checkpoints.py
 ```
@@ -136,7 +169,14 @@ hiện tại (ví dụ tải nhầm từ một lần chạy với split khác). 
 
 ---
 
-## 4. Chạy B1, B2 (ablation — mỗi cái ~1 ngày GPU với epoch=100 mặc định)
+## 4. Chạy B1, B2 (ablation) — ✅ ĐÃ XONG, BỎ QUA BƯỚC NÀY
+
+**Đã chạy xong trên Cadence — xem banner "TÌNH TRẠNG HIỆN TẠI" ở đầu file.** Checkpoint B1/B2
+đã nằm trong `handoff_all_checkpoints.zip` giải nén ở Bước 3.5 — đi thẳng xuống Bước 5.
+
+Giữ lại phần dưới đây **chỉ để tham khảo** — nếu vì lý do nào đó cần train lại (ví dụ file zip
+bị hỏng), đây là lệnh gốc (thực tế đo được ~2.9h/B1 + ~2.6h/B2 ở `batch_size=256` trên l40s,
+KHÔNG phải "~1 ngày" như ước tính ban đầu dưới đây — ước tính cũ quá cao):
 
 ```bash
 bash scripts/run_geoformerdock_ablations.sh both
@@ -248,12 +288,12 @@ cho tất cả). Đối chiếu lại trước khi tin bất kỳ con số nào 
 
 ---
 
-## 8. A2 — đã chạy sẵn, không cần làm lại trừ khi có B1/B2
+## 8. A2 — đã chạy sẵn kể cả B1/B2, không cần làm lại
 
-Việc này **đã chạy xong trên máy chuẩn bị** (không cần `data/`), kết quả nằm ở
-`results/logs/epoch_selection_audit.tsv` (đã có trong repo qua commit). Chỉ cần chạy lại nếu
-muốn có thêm 2 dòng B1/B2 sau khi có `training_metrics_train/test.csv` của chúng (bước 4
-tự động tạo ra):
+Việc này **đã chạy xong**, kết quả nằm ở `results/logs/epoch_selection_audit.tsv` (đã có trong
+repo qua bản gửi kèm) — đủ cả 9 dòng, kể cả `geoformerdock_uncertainty`/`geoformerdock_nobalance`
+(script `tools/select_epoch_by_train.py` đã fix để tự quét thêm 2 model này). Chỉ cần chạy lại
+nếu bạn nghi ngờ kết quả hoặc muốn double-check:
 
 ```bash
 python3 tools/select_epoch_by_train.py
@@ -263,18 +303,17 @@ python3 tools/select_epoch_by_train.py
 
 ## 9. Gửi lại cho Đức sau khi xong
 
+Đức đã có sẵn mọi checkpoint (gửi kèm ở Bước 3.5) — **không cần gửi lại `results/models/`**.
+Chỉ cần gửi 3 thứ MỚI mà runbook này tạo ra:
 ```
-results/models/geoformerdock_uncertainty/     (toàn bộ thư mục — B1)
-results/models/geoformerdock_nobalance/       (toàn bộ thư mục — B2)
-results/predictions/*.csv                     (4-8 file tuy da tai baseline tuy chon
-                                                chua va B1/B2 xong chua — buoc 5)
+results/predictions/*.csv                     (6-8 file tùy đã chạy baseline tùy chọn
+                                                chưa — bước 5)
 results/logs/exact_metrics_all.log            (bước 6)
 results/logs/paired_bootstrap_all.log         (bước 7)
-results/logs/epoch_selection_audit.tsv        (cập nhật nếu chạy lại ở bước 8)
 ```
+(Bỏ luôn nếu bước 8 không chạy lại — file đó Đức đã có, không đổi.)
 
-Không cần gửi lại `data/` (quá nặng, Đức không cần bản sao) hay `results/models/<6 model gốc>`
-(đã có sẵn).
+Không cần gửi lại `data/` (quá nặng, Đức không cần bản sao).
 
 ---
 

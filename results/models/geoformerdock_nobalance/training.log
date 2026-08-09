@@ -1,0 +1,2339 @@
+--- DOCKBENCH TRAINING (5-Loss Pipeline) ---
+trainfile = '/mnt/agent/work/85fa1f93d6f923cc/agent/system/working_dir/data/types/ref_uff_train0.types'
+testfile = '/mnt/agent/work/85fa1f93d6f923cc/agent/system/working_dir/data/types/ref_uff_test0.types'
+data_root = '/mnt/agent/work/85fa1f93d6f923cc/agent/system/working_dir/data'
+shuffle = True
+label_pos = 0
+affinity_pos = 1
+rmsd_pos = None
+flexlabel_pos = None
+stratify_receptor = False
+stratify_pos = 1
+stratify_max = 0
+stratify_min = 0
+stratify_step = 0
+ligmolcache = ''
+recmolcache = ''
+out_dir = '/mnt/agent/work/85fa1f93d6f923cc/agent/system/working_dir/results/models/geoformerdock_nobalance'
+log_file = 'training.log'
+model = 'geoformerdock'
+dimension: 2.35000E+01
+resolution: 5.00000E-01
+base_lr: 1.00000E-03
+momentum: 9.00000E-01
+weight_decay: 1.00000E-02
+batch_size = 256
+random_rotation = True
+random_translation: 1.00000E+00
+iterations = 100
+iteration_scheme = 'small'
+lr_dynamic = True
+lr_patience = 5
+lr_reduce: 1.00000E-01
+lr_min: 1.00000E-06
+warmup_epochs = 2
+clip_gradients: 5.00000E+00
+use_sam = False
+sam_rho: 5.00000E-02
+use_amp = True
+use_pose_to_affinity_gate = False
+stop_grad_pose_to_affinity = False
+metric_ema_alpha: 3.00000E-01
+early_stop_metric = 'composite_cidx_balacc'
+early_stop_composite_w_cidx: 5.00000E-01
+early_stop_patience = 25
+early_stop_min_delta: 1.00000E-04
+scale_affinity_loss: 1.00000E+00
+delta_affinity_loss: 1.00000E+00
+scale_ranking: 5.00000E-02
+ranking_num_pairs = 128
+ranking_temperature: 1.00000E+00
+hard_neg_fraction: 3.00000E-01
+rank_warmup_epochs = 10
+rank_rampup_epochs = 15
+scale_pose_coupling: 0.00000E+00
+lambda_pose: 1.20000E+00
+pose_total_weight: 8.50000E-01
+aff_total_weight: 1.50000E-01
+pose_warmup_epochs = 0
+pose_only_epochs = 4
+pose_loss_scale: 5.00000E-01
+pose_focal_gamma: 2.00000E+00
+pose_focal_alpha: 7.50000E-01
+pose_class_normalize = True
+pose_balance_batch = False
+pose_balance_target_per_class = 0
+pose_prior_logit_scale: 2.50000E-01
+disable_pose_prior_init = True
+pose_loss_type = 'focal'
+rmsd_good_max: 1.50000E+00
+rmsd_bad_min: 3.00000E+00
+use_gradient_alignment = False
+scale_align: 1.00000E-01
+full_loss_epoch = 15
+scale_dist_constraint: 2.00000E-02
+scale_anchor_loss: 1.00000E-02
+normalize_targets = True
+max_pseudo_atoms = 12
+num_transformer_layers = 2
+geoformer_uncertainty = False
+scale_flexpose_loss: 1.00000E+00
+test_every = 2
+checkpoint_every = 100
+num_checkpoints = 1
+checkpoint_prefix = ''
+checkpoint_dir = ''
+progress_bar = False
+gpu = 'cuda:0'
+roc_auc = False
+cache_structures = True
+seed = 2026
+silent = False
+pytorch = '2.2.2+cu121'
+ignite = '0.5.5'
+cuda = '12.1'
+
+=== TARGET STATISTICS ===
+  [DEBUG] Affinity target stats (N=7758):
+    mean=6.318  std=2.047
+    p01=2.310      p05=3.020      p25=4.712      p50=6.400      p75=7.800      p95=9.700      p99=11.200  
+  [DEBUG] Pose sample stats: total=62335, valid=62335, ignored=0, bad=54577, good=7758
+          valid ratio: bad=0.8755, good=0.1245
+  [NORM] pK mean=6.318, std=2.047
+  GeoFormerDock arch: num_transformer_layers=2, max_pseudo_atoms=12
+  Pose prior init: disabled by --disable_pose_prior_init
+  Pose prior init: skipped (no final 2-logit pose layer found)
+  Calibration head: scale=1.0, bias=0.0 (z-space; frozen — no drift)
+  Using eager mode for geoformerdock
+  Model parameters: 1,594,573
+  Optimizer: AdamW(lr=0.001, wd=0.01)
+  Mixed-precision (AMP) enabled
+  Loss (Pose): Focal(γ=2.0, α_good=0.75, α_bad=0.25); λ_pose=1.2, pose_scale=0.5, w_pose=0.85, w_aff=0.15, warmup_epochs=0, pose_only_epochs=4, class_norm=True, batch_balance=False
+  Loss 1 (Regression): ConfidenceAware(scale=1.0)
+  Loss 2 (Ranking): SoftProbabilistic(scale=0.05, τ=1.0, pairs=128)
+  Loss 3 (DistAlign): scale=0.02
+  Loss 4 (Anchor): scale=0.01
+  Early stopping: composite = 0.500*C-index + 0.500*Balanced Accuracy (min_delta=0.0001, patience=25)
+  [DEBUG] Grad norms:
+    backbone: 0.0452
+    pose_local: 0.0431
+    pose_geometry: 0.0253
+    pose_local_proj: 0.0250
+    pose_norm: 0.0029
+    pose_fusion: 0.0548
+    pose_head: 0.0597
+>>> Train Results - Epoch[2] <<<
+    Balanced Accuracy: 0.67423
+    Accuracy: 0.58659
+    Pose Loss: 0.69513
+    Pose Recall Neg: 0.55754
+    Pose Recall Pos: 0.79093
+    MCC: 0.23015
+    PR AUC: 0.22179
+    MAE: 4.30063
+    RMSE: 4.76890
+    Pearson R: 0.11016
+    Spearman Rho: 0.10572
+    C-index: 0.53334
+    EF_1pct: 1.59669
+    EF_5pct: 1.67298
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 3.99461
+    Loss: 4.68975
+    Epoch Time: 95.58704
+    Elapsed Time: 191.62498
+    lr: 0.001000
+    train_ema: Pose=0.6951, BalAcc=0.6742, PR=0.2218, Rneg=0.5575, Rpos=0.7909, MAE=4.3006, RMSE=4.7689, r=0.1102, Cidx=0.5333
+>>> Test Results - Epoch[2] <<<
+    Balanced Accuracy: 0.69102
+    Accuracy: 0.57557
+    Pose Loss: 0.69615
+    Pose Recall Neg: 0.53292
+    Pose Recall Pos: 0.84912
+    MCC: 0.26120
+    PR AUC: 0.27109
+    MAE: 4.27633
+    RMSE: 4.76933
+    Pearson R: 0.25734
+    Spearman Rho: 0.25998
+    C-index: 0.58852
+    EF_1pct: 3.31198
+    EF_5pct: 1.79697
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 3.99499
+    Loss: 4.69114
+    test_ema: Pose=0.6961, BalAcc=0.6910, PR=0.2711, Rneg=0.5329, Rpos=0.8491, MAE=4.2763, RMSE=4.7693, r=0.2573, Cidx=0.5885
+>>> Train Results - Epoch[4] <<<
+    Balanced Accuracy: 0.71760
+    Accuracy: 0.57414
+    Pose Loss: 0.68548
+    Pose Recall Neg: 0.52660
+    Pose Recall Pos: 0.90861
+    MCC: 0.28776
+    PR AUC: 0.39894
+    MAE: 3.18613
+    RMSE: 3.75519
+    Pearson R: 0.08598
+    Spearman Rho: 0.07515
+    C-index: 0.52366
+    EF_1pct: 2.12462
+    EF_5pct: 1.79156
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 2.87509
+    Loss: 3.56057
+    Epoch Time: 96.85240
+    Elapsed Time: 385.26366
+    lr: 0.001000
+    train_ema: Pose=0.6922, BalAcc=0.6872, PR=0.2749, Rneg=0.5483, Rpos=0.8262, MAE=3.9663, RMSE=4.4648, r=0.1029, Cidx=0.5304
+>>> Test Results - Epoch[4] <<<
+    Balanced Accuracy: 0.75040
+    Accuracy: 0.63144
+    Pose Loss: 0.65766
+    Pose Recall Neg: 0.58748
+    Pose Recall Pos: 0.91332
+    MCC: 0.34245
+    PR AUC: 0.46487
+    MAE: 3.13026
+    RMSE: 3.73589
+    Pearson R: 0.23350
+    Spearman Rho: 0.20633
+    C-index: 0.57000
+    EF_1pct: 3.31198
+    EF_5pct: 2.18204
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 2.83365
+    Loss: 3.49130
+    test_ema: Pose=0.6846, BalAcc=0.7088, PR=0.3292, Rneg=0.5493, Rpos=0.8684, MAE=3.9325, RMSE=4.4593, r=0.2502, Cidx=0.5830
+>>> Train Results - Epoch[6] <<<
+    Balanced Accuracy: 0.64944
+    Accuracy: 0.40889
+    Pose Loss: 0.78085
+    Pose Recall Neg: 0.32917
+    Pose Recall Pos: 0.96971
+    MCC: 0.21699
+    PR AUC: 0.40840
+    MAE: 1.74934
+    RMSE: 2.11057
+    Pearson R: 0.63073
+    Spearman Rho: 0.63483
+    C-index: 0.72652
+    EF_1pct: 1.57093
+    EF_5pct: 1.23991
+    Success_at_1: 0.00000
+    Success_at_5: 0.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 1.39098
+    Loss: 2.17184
+    Epoch Time: 103.83721
+    Elapsed Time: 593.03383
+    lr: 0.001000
+    train_ema: Pose=0.7188, BalAcc=0.6759, PR=0.3150, Rneg=0.4825, Rpos=0.8693, MAE=3.3012, RMSE=3.7585, r=0.2613, Cidx=0.5893
+>>> Test Results - Epoch[6] <<<
+    Balanced Accuracy: 0.67142
+    Accuracy: 0.44673
+    Pose Loss: 0.76011
+    Pose Recall Neg: 0.36370
+    Pose Recall Pos: 0.97913
+    MCC: 0.25161
+    PR AUC: 0.47771
+    MAE: 1.91891
+    RMSE: 2.27792
+    Pearson R: 0.70256
+    Spearman Rho: 0.71269
+    C-index: 0.75844
+    EF_1pct: 2.05027
+    EF_5pct: 1.09102
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 1.52775
+    Loss: 2.28786
+    test_ema: Pose=0.7073, BalAcc=0.6976, PR=0.3738, Rneg=0.4936, Rpos=0.9016, MAE=3.3284, RMSE=3.8049, r=0.3859, Cidx=0.6356
+>>> Train Results - Epoch[8] <<<
+    Balanced Accuracy: 0.73088
+    Accuracy: 0.79228
+    Pose Loss: 0.56456
+    Pose Recall Neg: 0.81263
+    Pose Recall Pos: 0.64914
+    MCC: 0.35450
+    PR AUC: 0.42236
+    MAE: 1.24405
+    RMSE: 1.55492
+    Pearson R: 0.66229
+    Spearman Rho: 0.66369
+    C-index: 0.73868
+    EF_1pct: 2.40790
+    EF_5pct: 1.73742
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.88228
+    Loss: 1.44684
+    Epoch Time: 103.81617
+    Elapsed Time: 800.63039
+    lr: 0.000999
+    train_ema: Pose=0.6725, BalAcc=0.6924, PR=0.3472, Rneg=0.5816, Rpos=0.8032, MAE=2.6841, RMSE=3.0974, r=0.3816, Cidx=0.6341
+>>> Test Results - Epoch[8] <<<
+    Balanced Accuracy: 0.75154
+    Accuracy: 0.81507
+    Pose Loss: 0.55406
+    Pose Recall Neg: 0.83855
+    Pose Recall Pos: 0.66453
+    MCC: 0.40881
+    PR AUC: 0.46337
+    MAE: 1.30730
+    RMSE: 1.59574
+    Pearson R: 0.69593
+    Spearman Rho: 0.69759
+    C-index: 0.75362
+    EF_1pct: 1.73485
+    EF_5pct: 1.86115
+    Success_at_1: 0.00000
+    Success_at_5: 0.00000
+    Success_at_10: 0.00000
+    Affinity Loss: 0.92540
+    Loss: 1.47947
+    test_ema: Pose=0.6613, BalAcc=0.7138, PR=0.4006, Rneg=0.5971, Rpos=0.8305, MAE=2.7221, RMSE=3.1421, r=0.4789, Cidx=0.6710
+  [DEBUG] Grad norms:
+    backbone: 0.0963
+    pose_local: 0.0240
+    pose_geometry: 0.0087
+    pose_local_proj: 0.0232
+    pose_norm: 0.0031
+    pose_fusion: 0.0255
+    pose_head: 0.0566
+    aff_local: 0.0233
+    tokenizer: 0.0012
+    transformer_layers: 0.0088
+    transformer_norm: 0.0037
+    aff_global_proj: 0.0497
+    aff_token_proj: 0.0181
+    aff_fusion: 0.0609
+    affinity_head: 0.2750
+>>> Train Results - Epoch[10] <<<
+    Balanced Accuracy: 0.76475
+    Accuracy: 0.64323
+    Pose Loss: 0.63326
+    Pose Recall Neg: 0.60296
+    Pose Recall Pos: 0.92653
+    MCC: 0.35054
+    PR AUC: 0.52109
+    MAE: 1.29888
+    RMSE: 1.61752
+    Pearson R: 0.68833
+    Spearman Rho: 0.70205
+    C-index: 0.75308
+    EF_1pct: 3.25775
+    EF_5pct: 1.59822
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.94615
+    Loss: 1.57941
+    Epoch Time: 103.82535
+    Elapsed Time: 1008.24961
+    lr: 0.000998
+    train_ema: Pose=0.6608, BalAcc=0.7141, PR=0.3994, Rneg=0.5880, Rpos=0.8402, MAE=2.2685, RMSE=2.6535, r=0.4736, Cidx=0.6698
+>>> Test Results - Epoch[10] <<<
+    Balanced Accuracy: 0.77267
+    Accuracy: 0.66176
+    Pose Loss: 0.62126
+    Pose Recall Neg: 0.62078
+    Pose Recall Pos: 0.92456
+    MCC: 0.37427
+    PR AUC: 0.55756
+    MAE: 1.46875
+    RMSE: 1.80512
+    Pearson R: 0.73078
+    Spearman Rho: 0.72956
+    C-index: 0.76586
+    EF_1pct: 2.83884
+    EF_5pct: 2.47084
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 1.08222
+    Loss: 1.70347
+    test_ema: Pose=0.6493, BalAcc=0.7315, PR=0.4477, Rneg=0.6042, Rpos=0.8587, MAE=2.3461, RMSE=2.7410, r=0.5545, Cidx=0.6995
+>>> Train Results - Epoch[12] <<<
+    Balanced Accuracy: 0.52710
+    Accuracy: 0.17249
+    Pose Loss: 1.06932
+    Pose Recall Neg: 0.05497
+    Pose Recall Pos: 0.99923
+    MCC: 0.08350
+    PR AUC: 0.43534
+    MAE: 1.12923
+    RMSE: 1.44399
+    Pearson R: 0.71348
+    Spearman Rho: 0.71937
+    C-index: 0.76130
+    EF_1pct: 3.29638
+    EF_5pct: 1.47449
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.77565
+    Loss: 1.84497
+    Epoch Time: 103.76827
+    Elapsed Time: 1215.82954
+    lr: 0.000996
+    train_ema: Pose=0.7833, BalAcc=0.6580, PR=0.4102, Rneg=0.4281, Rpos=0.8879, MAE=1.9267, RMSE=2.2906, r=0.5456, Cidx=0.6972
+>>> Test Results - Epoch[12] <<<
+    Balanced Accuracy: 0.52273
+    Accuracy: 0.17540
+    Pose Loss: 1.07023
+    Pose Recall Neg: 0.04706
+    Pose Recall Pos: 0.99839
+    MCC: 0.07838
+    PR AUC: 0.50141
+    MAE: 1.20131
+    RMSE: 1.49655
+    Pearson R: 0.74144
+    Spearman Rho: 0.73847
+    C-index: 0.77138
+    EF_1pct: 2.20798
+    EF_5pct: 1.82906
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.82540
+    Loss: 1.89564
+    test_ema: Pose=0.7756, BalAcc=0.6688, PR=0.4638, Rneg=0.4371, Rpos=0.9006, MAE=2.0027, RMSE=2.3677, r=0.6106, Cidx=0.7210
+>>> Train Results - Epoch[14] <<<
+    Balanced Accuracy: 0.72792
+    Accuracy: 0.55261
+    Pose Loss: 0.69741
+    Pose Recall Neg: 0.49451
+    Pose Recall Pos: 0.96133
+    MCC: 0.30331
+    PR AUC: 0.55963
+    MAE: 1.16363
+    RMSE: 1.46322
+    Pearson R: 0.71642
+    Spearman Rho: 0.72165
+    C-index: 0.76068
+    EF_1pct: 3.33501
+    EF_5pct: 1.80702
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.80967
+    Loss: 1.50707
+    Epoch Time: 103.84289
+    Elapsed Time: 1423.54473
+    lr: 0.000994
+    train_ema: Pose=0.7576, BalAcc=0.6790, PR=0.4550, Rneg=0.4480, Rpos=0.9099, MAE=1.6978, RMSE=2.0424, r=0.5968, Cidx=0.7163
+>>> Test Results - Epoch[14] <<<
+    Balanced Accuracy: 0.73533
+    Accuracy: 0.57254
+    Pose Loss: 0.66705
+    Pose Recall Neg: 0.51239
+    Pose Recall Pos: 0.95827
+    MCC: 0.32327
+    PR AUC: 0.59910
+    MAE: 1.26781
+    RMSE: 1.58214
+    Pearson R: 0.74237
+    Spearman Rho: 0.74240
+    C-index: 0.77336
+    EF_1pct: 3.62740
+    EF_5pct: 2.31040
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.89120
+    Loss: 1.55826
+    test_ema: Pose=0.7430, BalAcc=0.6888, PR=0.5044, Rneg=0.4597, Rpos=0.9179, MAE=1.7822, RMSE=2.1320, r=0.6501, Cidx=0.7367
+>>> Train Results - Epoch[16] <<<
+    Balanced Accuracy: 0.60730
+    Accuracy: 0.31709
+    Pose Loss: 0.91486
+    Pose Recall Neg: 0.22092
+    Pose Recall Pos: 0.99368
+    MCC: 0.17907
+    PR AUC: 0.52825
+    MAE: 1.41559
+    RMSE: 1.75992
+    Pearson R: 0.70895
+    Spearman Rho: 0.71049
+    C-index: 0.75282
+    EF_1pct: 2.97447
+    EF_5pct: 2.08027
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 1.05117
+    Loss: 1.96603
+    Epoch Time: 103.96637
+    Elapsed Time: 1631.36994
+    lr: 0.000991
+    train_ema: Pose=0.8047, BalAcc=0.6575, PR=0.4770, Rneg=0.3799, Rpos=0.9351, MAE=1.6131, RMSE=1.9577, r=0.6305, Cidx=0.7272
+>>> Test Results - Epoch[16] <<<
+    Balanced Accuracy: 0.60648
+    Accuracy: 0.32265
+    Pose Loss: 0.91109
+    Pose Recall Neg: 0.21777
+    Pose Recall Pos: 0.99518
+    MCC: 0.18581
+    PR AUC: 0.57278
+    MAE: 1.48011
+    RMSE: 1.79573
+    Pearson R: 0.72102
+    Spearman Rho: 0.71010
+    C-index: 0.76164
+    EF_1pct: 1.89256
+    EF_5pct: 2.24622
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 1.12114
+    Loss: 2.03223
+    test_ema: Pose=0.7934, BalAcc=0.6641, PR=0.5249, Rneg=0.3871, Rpos=0.9411, MAE=1.6916, RMSE=2.0311, r=0.6714, Cidx=0.7442
+>>> Train Results - Epoch[18] <<<
+    Balanced Accuracy: 0.73103
+    Accuracy: 0.54953
+    Pose Loss: 0.69115
+    Pose Recall Neg: 0.48938
+    Pose Recall Pos: 0.97267
+    MCC: 0.30792
+    PR AUC: 0.60183
+    MAE: 1.20677
+    RMSE: 1.53013
+    Pearson R: 0.70600
+    Spearman Rho: 0.72902
+    C-index: 0.76656
+    EF_1pct: 3.63117
+    EF_5pct: 1.82764
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.85175
+    Loss: 1.54290
+    Epoch Time: 103.98050
+    Elapsed Time: 1839.26926
+    lr: 0.000987
+    train_ema: Pose=0.7707, BalAcc=0.6795, PR=0.5144, Rneg=0.4127, Rpos=0.9463, MAE=1.4912, RMSE=1.8294, r=0.6531, Cidx=0.7390
+>>> Test Results - Epoch[18] <<<
+    Balanced Accuracy: 0.73618
+    Accuracy: 0.55760
+    Pose Loss: 0.68924
+    Pose Recall Neg: 0.49161
+    Pose Recall Pos: 0.98074
+    MCC: 0.32614
+    PR AUC: 0.63672
+    MAE: 1.33490
+    RMSE: 1.65901
+    Pearson R: 0.72784
+    Spearman Rho: 0.74414
+    C-index: 0.77536
+    EF_1pct: 3.31198
+    EF_5pct: 2.47084
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.96543
+    Loss: 1.65467
+    test_ema: Pose=0.7622, BalAcc=0.6857, PR=0.5585, Rneg=0.4184, Rpos=0.9530, MAE=1.5846, RMSE=1.9195, r=0.6883, Cidx=0.7536
+  [DEBUG] Grad norms:
+    backbone: 0.0502
+    pose_local: 0.0088
+    pose_geometry: 0.0039
+    pose_local_proj: 0.0094
+    pose_norm: 0.0018
+    pose_fusion: 0.0073
+    pose_head: 0.0379
+    aff_local: 0.0147
+    tokenizer: 0.0005
+    transformer_layers: 0.0030
+    transformer_norm: 0.0016
+    aff_global_proj: 0.0401
+    aff_token_proj: 0.0090
+    aff_fusion: 0.0504
+    affinity_head: 0.2613
+>>> Train Results - Epoch[20] <<<
+    Balanced Accuracy: 0.61581
+    Accuracy: 0.33054
+    Pose Loss: 0.94299
+    Pose Recall Neg: 0.23600
+    Pose Recall Pos: 0.99562
+    MCC: 0.18865
+    PR AUC: 0.55192
+    MAE: 1.33261
+    RMSE: 1.67562
+    Pearson R: 0.69133
+    Spearman Rho: 0.72579
+    C-index: 0.76696
+    EF_1pct: 3.55391
+    EF_5pct: 1.82764
+    Success_at_1: 0.00000
+    Success_at_5: 0.00000
+    Success_at_10: 0.00000
+    Affinity Loss: 0.97944
+    Loss: 1.92243
+    Epoch Time: 103.83166
+    Elapsed Time: 2047.07160
+    lr: 0.000984
+    train_ema: Pose=0.8224, BalAcc=0.6604, PR=0.5257, Rneg=0.3597, Rpos=0.9611, MAE=1.4436, RMSE=1.7833, r=0.6646, Cidx=0.7474
+>>> Test Results - Epoch[20] <<<
+    Balanced Accuracy: 0.60696
+    Accuracy: 0.32113
+    Pose Loss: 0.95771
+    Pose Recall Neg: 0.21552
+    Pose Recall Pos: 0.99839
+    MCC: 0.18755
+    PR AUC: 0.60847
+    MAE: 1.49623
+    RMSE: 1.85091
+    Pearson R: 0.71765
+    Spearman Rho: 0.72561
+    C-index: 0.76792
+    EF_1pct: 3.31198
+    EF_5pct: 3.20888
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 1.12114
+    Loss: 2.07884
+    test_ema: Pose=0.8208, BalAcc=0.6621, PR=0.5735, Rneg=0.3576, Rpos=0.9666, MAE=1.5581, RMSE=1.8989, r=0.6971, Cidx=0.7579
+>>> Train Results - Epoch[22] <<<
+    Balanced Accuracy: 0.61105
+    Accuracy: 0.32114
+    Pose Loss: 0.85564
+    Pose Recall Neg: 0.22506
+    Pose Recall Pos: 0.99704
+    MCC: 0.18418
+    PR AUC: 0.59474
+    MAE: 1.08396
+    RMSE: 1.38304
+    Pearson R: 0.75235
+    Spearman Rho: 0.75801
+    C-index: 0.77888
+    EF_1pct: 3.86295
+    EF_5pct: 1.52604
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.73493
+    Loss: 1.59057
+    Epoch Time: 103.83338
+    Elapsed Time: 2254.71127
+    lr: 0.000979
+    train_ema: Pose=0.8323, BalAcc=0.6456, PR=0.5464, Rneg=0.3193, Rpos=0.9719, MAE=1.3357, RMSE=1.6632, r=0.6909, Cidx=0.7569
+>>> Test Results - Epoch[22] <<<
+    Balanced Accuracy: 0.60866
+    Accuracy: 0.32525
+    Pose Loss: 0.85695
+    Pose Recall Neg: 0.22053
+    Pose Recall Pos: 0.99679
+    MCC: 0.18878
+    PR AUC: 0.62697
+    MAE: 1.18290
+    RMSE: 1.48980
+    Pearson R: 0.76893
+    Spearman Rho: 0.76643
+    C-index: 0.79136
+    EF_1pct: 3.15426
+    EF_5pct: 2.75964
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.81809
+    Loss: 1.67504
+    test_ema: Pose=0.8317, BalAcc=0.6461, PR=0.5895, Rneg=0.3165, Rpos=0.9757, MAE=1.4455, RMSE=1.7762, r=0.7187, Cidx=0.7679
+>>> Train Results - Epoch[24] <<<
+    Balanced Accuracy: 0.75389
+    Accuracy: 0.60719
+    Pose Loss: 0.66524
+    Pose Recall Neg: 0.55857
+    Pose Recall Pos: 0.94921
+    MCC: 0.33525
+    PR AUC: 0.57533
+    MAE: 1.33451
+    RMSE: 1.66081
+    Pearson R: 0.74838
+    Spearman Rho: 0.75742
+    C-index: 0.77654
+    EF_1pct: 3.68268
+    EF_5pct: 1.60596
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.97750
+    Loss: 1.64274
+    Epoch Time: 103.72941
+    Elapsed Time: 2462.17752
+    lr: 0.000975
+    train_ema: Pose=0.7822, BalAcc=0.6781, PR=0.5551, Rneg=0.3911, Rpos=0.9651, MAE=1.3354, RMSE=1.6625, r=0.7082, Cidx=0.7628
+>>> Test Results - Epoch[24] <<<
+    Balanced Accuracy: 0.75303
+    Accuracy: 0.60199
+    Pose Loss: 0.67509
+    Pose Recall Neg: 0.54618
+    Pose Recall Pos: 0.95987
+    MCC: 0.34610
+    PR AUC: 0.61255
+    MAE: 1.50991
+    RMSE: 1.84851
+    Pearson R: 0.76041
+    Spearman Rho: 0.76022
+    C-index: 0.78580
+    EF_1pct: 3.15426
+    EF_5pct: 2.92008
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 1.12530
+    Loss: 1.80039
+    test_ema: Pose=0.7847, BalAcc=0.6781, PR=0.5964, Rneg=0.3854, Rpos=0.9709, MAE=1.4648, RMSE=1.7979, r=0.7312, Cidx=0.7733
+>>> Train Results - Epoch[26] <<<
+    Balanced Accuracy: 0.81758
+    Accuracy: 0.78997
+    Pose Loss: 0.45913
+    Pose Recall Neg: 0.78082
+    Pose Recall Pos: 0.85434
+    MCC: 0.45831
+    PR AUC: 0.61720
+    MAE: 1.02996
+    RMSE: 1.30327
+    Pearson R: 0.77843
+    Spearman Rho: 0.78362
+    C-index: 0.79404
+    EF_1pct: 4.01747
+    EF_5pct: 1.94880
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.68161
+    Loss: 1.14074
+    Epoch Time: 103.65536
+    Elapsed Time: 2669.68712
+    lr: 0.000969
+    train_ema: Pose=0.6853, BalAcc=0.7199, PR=0.5737, Rneg=0.5080, Rpos=0.9319, MAE=1.2437, RMSE=1.5547, r=0.7292, Cidx=0.7721
+>>> Test Results - Epoch[26] <<<
+    Balanced Accuracy: 0.82146
+    Accuracy: 0.77783
+    Pose Loss: 0.47020
+    Pose Recall Neg: 0.76170
+    Pose Recall Pos: 0.88122
+    MCC: 0.46892
+    PR AUC: 0.65815
+    MAE: 1.15466
+    RMSE: 1.45828
+    Pearson R: 0.76548
+    Spearman Rho: 0.75097
+    C-index: 0.78280
+    EF_1pct: 3.46969
+    EF_5pct: 3.17679
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.79125
+    Loss: 1.26145
+    test_ema: Pose=0.6903, BalAcc=0.7211, PR=0.6149, Rneg=0.4983, Rpos=0.9440, MAE=1.3718, RMSE=1.6960, r=0.7415, Cidx=0.7761
+>>> Train Results - Epoch[28] <<<
+    Balanced Accuracy: 0.82439
+    Accuracy: 0.85814
+    Pose Loss: 0.34325
+    Pose Recall Neg: 0.86932
+    Pose Recall Pos: 0.77945
+    MCC: 0.52450
+    PR AUC: 0.63649
+    MAE: 1.17560
+    RMSE: 1.46670
+    Pearson R: 0.73418
+    Spearman Rho: 0.73559
+    C-index: 0.77082
+    EF_1pct: 3.18049
+    EF_5pct: 1.50027
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.81531
+    Loss: 1.15856
+    Epoch Time: 103.84715
+    Elapsed Time: 2877.36215
+    lr: 0.000963
+    train_ema: Pose=0.5827, BalAcc=0.7513, PR=0.5925, Rneg=0.6164, Rpos=0.8861, MAE=1.2233, RMSE=1.5283, r=0.7307, Cidx=0.7717
+>>> Test Results - Epoch[28] <<<
+    Balanced Accuracy: 0.82464
+    Accuracy: 0.84192
+    Pose Loss: 0.36081
+    Pose Recall Neg: 0.84831
+    Pose Recall Pos: 0.80096
+    MCC: 0.51989
+    PR AUC: 0.65023
+    MAE: 1.33155
+    RMSE: 1.68632
+    Pearson R: 0.72209
+    Spearman Rho: 0.70747
+    C-index: 0.76288
+    EF_1pct: 3.15426
+    EF_5pct: 3.33724
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.96431
+    Loss: 1.32512
+    test_ema: Pose=0.5915, BalAcc=0.7522, PR=0.6255, Rneg=0.6033, Rpos=0.9011, MAE=1.3597, RMSE=1.6931, r=0.7357, Cidx=0.7722
+  [DEBUG] Grad norms:
+    backbone: 0.0487
+    pose_local: 0.0062
+    pose_geometry: 0.0027
+    pose_local_proj: 0.0061
+    pose_norm: 0.0016
+    pose_fusion: 0.0046
+    pose_head: 0.0265
+    aff_local: 0.0235
+    tokenizer: 0.0001
+    transformer_layers: 0.0007
+    transformer_norm: 0.0007
+    aff_global_proj: 0.0628
+    aff_token_proj: 0.0037
+    aff_fusion: 0.0193
+    affinity_head: 0.0582
+>>> Train Results - Epoch[30] <<<
+    Balanced Accuracy: 0.78821
+    Accuracy: 0.65605
+    Pose Loss: 0.58714
+    Pose Recall Neg: 0.61225
+    Pose Recall Pos: 0.96417
+    MCC: 0.38181
+    PR AUC: 0.64627
+    MAE: 1.18862
+    RMSE: 1.50978
+    Pearson R: 0.72459
+    Spearman Rho: 0.73423
+    C-index: 0.76914
+    EF_1pct: 3.16762
+    EF_5pct: 2.67573
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.83608
+    Loss: 1.42322
+    Epoch Time: 103.88043
+    Elapsed Time: 3085.01527
+    lr: 0.000957
+    train_ema: Pose=0.5840, BalAcc=0.7624, PR=0.6087, Rneg=0.6152, Rpos=0.9096, MAE=1.2129, RMSE=1.5228, r=0.7289, Cidx=0.7710
+>>> Test Results - Epoch[30] <<<
+    Balanced Accuracy: 0.76823
+    Accuracy: 0.62126
+    Pose Loss: 0.61333
+    Pose Recall Neg: 0.56696
+    Pose Recall Pos: 0.96950
+    MCC: 0.36656
+    PR AUC: 0.67088
+    MAE: 1.25980
+    RMSE: 1.57980
+    Pearson R: 0.72977
+    Spearman Rho: 0.71344
+    C-index: 0.76654
+    EF_1pct: 5.36225
+    EF_5pct: 2.92008
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.89896
+    Loss: 1.51229
+    test_ema: Pose=0.5980, BalAcc=0.7570, PR=0.6391, Rneg=0.5924, Rpos=0.9216, MAE=1.3297, RMSE=1.6591, r=0.7339, Cidx=0.7705
+>>> Train Results - Epoch[32] <<<
+    Balanced Accuracy: 0.80677
+    Accuracy: 0.75216
+    Pose Loss: 0.51355
+    Pose Recall Neg: 0.73406
+    Pose Recall Pos: 0.87948
+    MCC: 0.42685
+    PR AUC: 0.59062
+    MAE: 1.31112
+    RMSE: 1.65304
+    Pearson R: 0.73962
+    Spearman Rho: 0.74574
+    C-index: 0.77086
+    EF_1pct: 3.48953
+    EF_5pct: 2.33031
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.96180
+    Loss: 1.47535
+    Epoch Time: 103.97186
+    Elapsed Time: 3292.98102
+    lr: 0.000950
+    train_ema: Pose=0.5629, BalAcc=0.7757, PR=0.6033, Rneg=0.6508, Rpos=0.9005, MAE=1.2424, RMSE=1.5618, r=0.7321, Cidx=0.7709
+>>> Test Results - Epoch[32] <<<
+    Balanced Accuracy: 0.82101
+    Accuracy: 0.77588
+    Pose Loss: 0.49627
+    Pose Recall Neg: 0.75920
+    Pose Recall Pos: 0.88283
+    MCC: 0.46739
+    PR AUC: 0.63564
+    MAE: 1.44538
+    RMSE: 1.76914
+    Pearson R: 0.72764
+    Spearman Rho: 0.71687
+    C-index: 0.76506
+    EF_1pct: 2.68112
+    EF_5pct: 2.40666
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 1.07646
+    Loss: 1.57273
+    test_ema: Pose=0.5675, BalAcc=0.7762, PR=0.6381, Rneg=0.6424, Rpos=0.9100, MAE=1.3644, RMSE=1.6921, r=0.7320, Cidx=0.7688
+>>> Train Results - Epoch[34] <<<
+    Balanced Accuracy: 0.78365
+    Accuracy: 0.64012
+    Pose Loss: 0.63180
+    Pose Recall Neg: 0.59256
+    Pose Recall Pos: 0.97474
+    MCC: 0.37489
+    PR AUC: 0.66906
+    MAE: 1.05931
+    RMSE: 1.33877
+    Pearson R: 0.76907
+    Spearman Rho: 0.76803
+    C-index: 0.78544
+    EF_1pct: 2.87146
+    EF_5pct: 1.82764
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.70533
+    Loss: 1.33713
+    Epoch Time: 103.97405
+    Elapsed Time: 3500.91383
+    lr: 0.000943
+    train_ema: Pose=0.5836, BalAcc=0.7781, PR=0.6230, Rneg=0.6333, Rpos=0.9228, MAE=1.1874, RMSE=1.4949, r=0.7432, Cidx=0.7753
+>>> Test Results - Epoch[34] <<<
+    Balanced Accuracy: 0.77316
+    Accuracy: 0.62863
+    Pose Loss: 0.63953
+    Pose Recall Neg: 0.57522
+    Pose Recall Pos: 0.97111
+    MCC: 0.37328
+    PR AUC: 0.66844
+    MAE: 1.18383
+    RMSE: 1.44708
+    Pearson R: 0.77507
+    Spearman Rho: 0.76059
+    C-index: 0.78678
+    EF_1pct: 2.68112
+    EF_5pct: 2.50293
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.79909
+    Loss: 1.43861
+    test_ema: Pose=0.5891, BalAcc=0.7753, PR=0.6472, Rneg=0.6223, Rpos=0.9283, MAE=1.3103, RMSE=1.6186, r=0.7449, Cidx=0.7742
+>>> Train Results - Epoch[36] <<<
+    Balanced Accuracy: 0.56821
+    Accuracy: 0.24506
+    Pose Loss: 1.00232
+    Pose Recall Neg: 0.13797
+    Pose Recall Pos: 0.99845
+    MCC: 0.13809
+    PR AUC: 0.60551
+    MAE: 0.99422
+    RMSE: 1.27522
+    Pearson R: 0.78793
+    Spearman Rho: 0.79319
+    C-index: 0.79392
+    EF_1pct: 2.91009
+    EF_5pct: 1.50284
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.64594
+    Loss: 1.64826
+    Epoch Time: 103.89344
+    Elapsed Time: 3708.74808
+    lr: 0.000936
+    train_ema: Pose=0.7092, BalAcc=0.7151, PR=0.6178, Rneg=0.4847, Rpos=0.9455, MAE=1.1295, RMSE=1.4290, r=0.7566, Cidx=0.7809
+>>> Test Results - Epoch[36] <<<
+    Balanced Accuracy: 0.56728
+    Accuracy: 0.25249
+    Pose Loss: 1.01122
+    Pose Recall Neg: 0.13617
+    Pose Recall Pos: 0.99839
+    MCC: 0.14249
+    PR AUC: 0.65366
+    MAE: 1.17550
+    RMSE: 1.48982
+    Pearson R: 0.73335
+    Spearman Rho: 0.71384
+    C-index: 0.76530
+    EF_1pct: 2.68112
+    EF_5pct: 2.98426
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.79861
+    Loss: 1.80983
+    test_ema: Pose=0.7157, BalAcc=0.7129, PR=0.6491, Rneg=0.4764, Rpos=0.9493, MAE=1.2698, RMSE=1.5800, r=0.7415, Cidx=0.7715
+>>> Train Results - Epoch[38] <<<
+    Balanced Accuracy: 0.82021
+    Accuracy: 0.82061
+    Pose Loss: 0.39320
+    Pose Recall Neg: 0.82075
+    Pose Recall Pos: 0.81967
+    MCC: 0.48259
+    PR AUC: 0.60554
+    MAE: 1.05123
+    RMSE: 1.32727
+    Pearson R: 0.78496
+    Spearman Rho: 0.79192
+    C-index: 0.79554
+    EF_1pct: 2.89721
+    EF_5pct: 1.62400
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.70189
+    Loss: 1.09509
+    Epoch Time: 103.94484
+    Elapsed Time: 3916.57638
+    lr: 0.000928
+    train_ema: Pose=0.6144, BalAcc=0.7466, PR=0.6141, Rneg=0.5855, Rpos=0.9077, MAE=1.1060, RMSE=1.3985, r=0.7651, Cidx=0.7853
+>>> Test Results - Epoch[38] <<<
+    Balanced Accuracy: 0.81655
+    Accuracy: 0.83261
+    Pose Loss: 0.38109
+    Pose Recall Neg: 0.83855
+    Pose Recall Pos: 0.79454
+    MCC: 0.50159
+    PR AUC: 0.62965
+    MAE: 1.22929
+    RMSE: 1.52751
+    Pearson R: 0.74475
+    Spearman Rho: 0.73000
+    C-index: 0.76978
+    EF_1pct: 3.15426
+    EF_5pct: 2.37457
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.86766
+    Loss: 1.24875
+    test_ema: Pose=0.6153, BalAcc=0.7440, PR=0.6433, Rneg=0.5851, Rpos=0.9029, MAE=1.2577, RMSE=1.5642, r=0.7424, Cidx=0.7710
+  [DEBUG] Grad norms:
+    backbone: 0.0810
+    pose_local: 0.0084
+    pose_geometry: 0.0030
+    pose_local_proj: 0.0108
+    pose_norm: 0.0013
+    pose_fusion: 0.0039
+    pose_head: 0.0187
+    aff_local: 0.0310
+    tokenizer: 0.0001
+    transformer_layers: 0.0011
+    transformer_norm: 0.0034
+    aff_global_proj: 0.0916
+    aff_token_proj: 0.0171
+    aff_fusion: 0.0186
+    affinity_head: 0.0789
+>>> Train Results - Epoch[40] <<<
+    Balanced Accuracy: 0.75902
+    Accuracy: 0.81173
+    Pose Loss: 0.41355
+    Pose Recall Neg: 0.82920
+    Pose Recall Pos: 0.68884
+    MCC: 0.40315
+    PR AUC: 0.49779
+    MAE: 1.15683
+    RMSE: 1.45761
+    Pearson R: 0.76005
+    Spearman Rho: 0.76235
+    C-index: 0.78176
+    EF_1pct: 3.39939
+    EF_5pct: 2.69636
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.80462
+    Loss: 1.21817
+    Epoch Time: 103.98188
+    Elapsed Time: 4124.59285
+    lr: 0.000919
+    train_ema: Pose=0.5541, BalAcc=0.7504, PR=0.5792, Rneg=0.6586, Rpos=0.8421, MAE=1.1213, RMSE=1.4162, r=0.7636, Cidx=0.7842
+>>> Test Results - Epoch[40] <<<
+    Balanced Accuracy: 0.76037
+    Accuracy: 0.81161
+    Pose Loss: 0.42303
+    Pose Recall Neg: 0.83054
+    Pose Recall Pos: 0.69021
+    MCC: 0.41672
+    PR AUC: 0.56874
+    MAE: 1.32775
+    RMSE: 1.64104
+    Pearson R: 0.70898
+    Spearman Rho: 0.70822
+    C-index: 0.76018
+    EF_1pct: 4.88911
+    EF_5pct: 2.95217
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.96164
+    Loss: 1.38468
+    test_ema: Pose=0.5577, BalAcc=0.7489, PR=0.6209, Rneg=0.6587, Rpos=0.8391, MAE=1.2787, RMSE=1.5873, r=0.7324, Cidx=0.7678
+>>> Train Results - Epoch[42] <<<
+    Balanced Accuracy: 0.83249
+    Accuracy: 0.81065
+    Pose Loss: 0.38890
+    Pose Recall Neg: 0.80342
+    Pose Recall Pos: 0.86156
+    MCC: 0.48924
+    PR AUC: 0.62361
+    MAE: 0.96772
+    RMSE: 1.23555
+    Pearson R: 0.80665
+    Spearman Rho: 0.81100
+    C-index: 0.80602
+    EF_1pct: 2.56242
+    EF_5pct: 1.58018
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.62246
+    Loss: 1.01136
+    Epoch Time: 103.92560
+    Elapsed Time: 4332.37666
+    lr: 0.000910
+    train_ema: Pose=0.5046, BalAcc=0.7750, PR=0.5925, Rneg=0.7021, Rpos=0.8479, MAE=1.0752, RMSE=1.3620, r=0.7765, Cidx=0.7908
+>>> Test Results - Epoch[42] <<<
+    Balanced Accuracy: 0.83802
+    Accuracy: 0.79710
+    Pose Loss: 0.40954
+    Pose Recall Neg: 0.78198
+    Pose Recall Pos: 0.89406
+    MCC: 0.49971
+    PR AUC: 0.66414
+    MAE: 1.15655
+    RMSE: 1.44676
+    Pearson R: 0.75159
+    Spearman Rho: 0.74148
+    C-index: 0.77808
+    EF_1pct: 3.62740
+    EF_5pct: 2.79173
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.78411
+    Loss: 1.19365
+    test_ema: Pose=0.5132, BalAcc=0.7756, PR=0.6339, Rneg=0.6957, Rpos=0.8556, MAE=1.2420, RMSE=1.5451, r=0.7382, Cidx=0.7709
+>>> Train Results - Epoch[44] <<<
+    Balanced Accuracy: 0.71612
+    Accuracy: 0.51007
+    Pose Loss: 0.73248
+    Pose Recall Neg: 0.44178
+    Pose Recall Pos: 0.99046
+    MCC: 0.29281
+    PR AUC: 0.64529
+    MAE: 0.95082
+    RMSE: 1.21427
+    Pearson R: 0.80863
+    Spearman Rho: 0.81248
+    C-index: 0.81102
+    EF_1pct: 2.42078
+    EF_5pct: 1.58018
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.60265
+    Loss: 1.33513
+    Epoch Time: 104.01443
+    Elapsed Time: 4540.46123
+    lr: 0.000901
+    train_ema: Pose=0.5729, BalAcc=0.7573, PR=0.6084, Rneg=0.6240, Rpos=0.8907, MAE=1.0379, RMSE=1.3177, r=0.7861, Cidx=0.7968
+>>> Test Results - Epoch[44] <<<
+    Balanced Accuracy: 0.72554
+    Accuracy: 0.53919
+    Pose Loss: 0.70048
+    Pose Recall Neg: 0.47034
+    Pose Recall Pos: 0.98074
+    MCC: 0.31337
+    PR AUC: 0.68429
+    MAE: 1.13202
+    RMSE: 1.38970
+    Pearson R: 0.78505
+    Spearman Rho: 0.76326
+    C-index: 0.79184
+    EF_1pct: 1.89256
+    EF_5pct: 2.53502
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.76111
+    Loss: 1.46159
+    test_ema: Pose=0.5694, BalAcc=0.7606, PR=0.6490, Rneg=0.6281, Rpos=0.8931, MAE=1.2090, RMSE=1.4985, r=0.7522, Cidx=0.7772
+>>> Train Results - Epoch[46] <<<
+    Balanced Accuracy: 0.75494
+    Accuracy: 0.57813
+    Pose Loss: 0.65087
+    Pose Recall Neg: 0.51954
+    Pose Recall Pos: 0.99033
+    MCC: 0.33793
+    PR AUC: 0.69721
+    MAE: 0.90920
+    RMSE: 1.17961
+    Pearson R: 0.82016
+    Spearman Rho: 0.82861
+    C-index: 0.81670
+    EF_1pct: 2.72982
+    EF_5pct: 2.10604
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.57221
+    Loss: 1.22308
+    Epoch Time: 103.89180
+    Elapsed Time: 4748.27888
+    lr: 0.000891
+    train_ema: Pose=0.5963, BalAcc=0.7566, PR=0.6350, Rneg=0.5927, Rpos=0.9206, MAE=0.9993, RMSE=1.2763, r=0.7964, Cidx=0.8028
+>>> Test Results - Epoch[46] <<<
+    Balanced Accuracy: 0.74486
+    Accuracy: 0.57146
+    Pose Loss: 0.65495
+    Pose Recall Neg: 0.50738
+    Pose Recall Pos: 0.98234
+    MCC: 0.33693
+    PR AUC: 0.68968
+    MAE: 1.12828
+    RMSE: 1.42187
+    Pearson R: 0.75977
+    Spearman Rho: 0.74304
+    C-index: 0.77898
+    EF_1pct: 2.05027
+    EF_5pct: 1.92533
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.76813
+    Loss: 1.42308
+    test_ema: Pose=0.5951, BalAcc=0.7559, PR=0.6612, Rneg=0.5919, Rpos=0.9199, MAE=1.1848, RMSE=1.4755, r=0.7545, Cidx=0.7777
+>>> Train Results - Epoch[48] <<<
+    Balanced Accuracy: 0.77996
+    Accuracy: 0.62756
+    Pose Loss: 0.60671
+    Pose Recall Neg: 0.57706
+    Pose Recall Pos: 0.98286
+    MCC: 0.36970
+    PR AUC: 0.64754
+    MAE: 1.00487
+    RMSE: 1.31449
+    Pearson R: 0.80413
+    Spearman Rho: 0.80898
+    C-index: 0.80874
+    EF_1pct: 2.25339
+    EF_5pct: 1.46933
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.66575
+    Loss: 1.27246
+    Epoch Time: 103.94810
+    Elapsed Time: 4956.10662
+    lr: 0.000881
+    train_ema: Pose=0.5994, BalAcc=0.7636, PR=0.6388, Rneg=0.5880, Rpos=0.9393, MAE=1.0010, RMSE=1.2877, r=0.7987, Cidx=0.8046
+>>> Test Results - Epoch[48] <<<
+    Balanced Accuracy: 0.76866
+    Accuracy: 0.62083
+    Pose Loss: 0.61560
+    Pose Recall Neg: 0.56621
+    Pose Recall Pos: 0.97111
+    MCC: 0.36715
+    PR AUC: 0.64764
+    MAE: 1.19539
+    RMSE: 1.50257
+    Pearson R: 0.75327
+    Spearman Rho: 0.73819
+    C-index: 0.77862
+    EF_1pct: 3.46969
+    EF_5pct: 2.56711
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.82410
+    Loss: 1.43969
+    test_ema: Pose=0.6012, BalAcc=0.7597, PR=0.6571, Rneg=0.5842, Rpos=0.9353, MAE=1.1880, RMSE=1.4836, r=0.7541, Cidx=0.7780
+  [DEBUG] Grad norms:
+    backbone: 0.0575
+    pose_local: 0.0067
+    pose_geometry: 0.0041
+    pose_local_proj: 0.0096
+    pose_norm: 0.0023
+    pose_fusion: 0.0057
+    pose_head: 0.0250
+    aff_local: 0.0348
+    tokenizer: 0.0001
+    transformer_layers: 0.0006
+    transformer_norm: 0.0014
+    aff_global_proj: 0.0956
+    aff_token_proj: 0.0076
+    aff_fusion: 0.0247
+    affinity_head: 0.1231
+>>> Train Results - Epoch[50] <<<
+    Balanced Accuracy: 0.76935
+    Accuracy: 0.60860
+    Pose Loss: 0.60629
+    Pose Recall Neg: 0.55533
+    Pose Recall Pos: 0.98337
+    MCC: 0.35575
+    PR AUC: 0.68446
+    MAE: 0.94843
+    RMSE: 1.22410
+    Pearson R: 0.81649
+    Spearman Rho: 0.82459
+    C-index: 0.81494
+    EF_1pct: 2.52379
+    EF_5pct: 1.87920
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.60943
+    Loss: 1.21572
+    Epoch Time: 103.95193
+    Elapsed Time: 5163.87394
+    lr: 0.000870
+    train_ema: Pose=0.6015, BalAcc=0.7653, PR=0.6525, Rneg=0.5782, Rpos=0.9525, MAE=0.9852, RMSE=1.2686, r=0.8040, Cidx=0.8077
+>>> Test Results - Epoch[50] <<<
+    Balanced Accuracy: 0.75426
+    Accuracy: 0.60178
+    Pose Loss: 0.60384
+    Pose Recall Neg: 0.54543
+    Pose Recall Pos: 0.96308
+    MCC: 0.34781
+    PR AUC: 0.69429
+    MAE: 1.26603
+    RMSE: 1.59024
+    Pearson R: 0.71555
+    Spearman Rho: 0.68848
+    C-index: 0.75318
+    EF_1pct: 3.94283
+    EF_5pct: 2.69546
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.90535
+    Loss: 1.50920
+    test_ema: Pose=0.6020, BalAcc=0.7581, PR=0.6683, Rneg=0.5726, Rpos=0.9436, MAE=1.2114, RMSE=1.5156, r=0.7426, Cidx=0.7705
+>>> Train Results - Epoch[52] <<<
+    Balanced Accuracy: 0.79594
+    Accuracy: 0.65961
+    Pose Loss: 0.54753
+    Pose Recall Neg: 0.61443
+    Pose Recall Pos: 0.97744
+    MCC: 0.39207
+    PR AUC: 0.67742
+    MAE: 0.94138
+    RMSE: 1.21313
+    Pearson R: 0.80808
+    Spearman Rho: 0.81621
+    C-index: 0.81090
+    EF_1pct: 2.40790
+    EF_5pct: 1.50284
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.60184
+    Loss: 1.14937
+    Epoch Time: 103.90038
+    Elapsed Time: 5371.70182
+    lr: 0.000859
+    train_ema: Pose=0.5853, BalAcc=0.7745, PR=0.6600, Rneg=0.5891, Rpos=0.9600, MAE=0.9721, RMSE=1.2520, r=0.8052, Cidx=0.8087
+>>> Test Results - Epoch[52] <<<
+    Balanced Accuracy: 0.78398
+    Accuracy: 0.66609
+    Pose Loss: 0.53456
+    Pose Recall Neg: 0.62253
+    Pose Recall Pos: 0.94543
+    MCC: 0.38970
+    PR AUC: 0.68516
+    MAE: 1.23781
+    RMSE: 1.54899
+    Pearson R: 0.71828
+    Spearman Rho: 0.69303
+    C-index: 0.75672
+    EF_1pct: 3.46969
+    EF_5pct: 2.56711
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.86446
+    Loss: 1.39902
+    test_ema: Pose=0.5818, BalAcc=0.7658, PR=0.6733, Rneg=0.5875, Rpos=0.9442, MAE=1.2193, RMSE=1.5256, r=0.7353, Cidx=0.7664
+>>> Train Results - Epoch[54] <<<
+    Balanced Accuracy: 0.85005
+    Accuracy: 0.83123
+    Pose Loss: 0.40234
+    Pose Recall Neg: 0.82500
+    Pose Recall Pos: 0.87510
+    MCC: 0.52548
+    PR AUC: 0.68630
+    MAE: 0.97079
+    RMSE: 1.25518
+    Pearson R: 0.81198
+    Spearman Rho: 0.81287
+    C-index: 0.81200
+    EF_1pct: 2.58818
+    EF_5pct: 1.80702
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.62559
+    Loss: 1.02792
+    Epoch Time: 103.93845
+    Elapsed Time: 5579.48571
+    lr: 0.000848
+    train_ema: Pose=0.5304, BalAcc=0.7972, PR=0.6679, Rneg=0.6598, Rpos=0.9345, MAE=0.9717, RMSE=1.2529, r=0.8073, Cidx=0.8097
+>>> Test Results - Epoch[54] <<<
+    Balanced Accuracy: 0.84037
+    Accuracy: 0.81875
+    Pose Loss: 0.40586
+    Pose Recall Neg: 0.81076
+    Pose Recall Pos: 0.86998
+    MCC: 0.51735
+    PR AUC: 0.68008
+    MAE: 1.25081
+    RMSE: 1.58630
+    Pearson R: 0.70164
+    Spearman Rho: 0.67406
+    C-index: 0.74752
+    EF_1pct: 3.15426
+    EF_5pct: 2.69546
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.88747
+    Loss: 1.29333
+    test_ema: Pose=0.5290, BalAcc=0.7882, PR=0.6754, Rneg=0.6545, Rpos=0.9219, MAE=1.2288, RMSE=1.5438, r=0.7252, Cidx=0.7607
+>>> Train Results - Epoch[56] <<<
+    Balanced Accuracy: 0.74942
+    Accuracy: 0.56761
+    Pose Loss: 0.66046
+    Pose Recall Neg: 0.50736
+    Pose Recall Pos: 0.99149
+    MCC: 0.33133
+    PR AUC: 0.68642
+    MAE: 0.89462
+    RMSE: 1.16068
+    Pearson R: 0.84476
+    Spearman Rho: 0.84952
+    C-index: 0.82968
+    EF_1pct: 2.92296
+    EF_5pct: 1.95911
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.56072
+    Loss: 1.22118
+    Epoch Time: 103.82536
+    Elapsed Time: 5787.19453
+    lr: 0.000836
+    train_ema: Pose=0.5694, BalAcc=0.7829, PR=0.6734, Rneg=0.6141, Rpos=0.9516, MAE=0.9486, RMSE=1.2253, r=0.8185, Cidx=0.8157
+>>> Test Results - Epoch[56] <<<
+    Balanced Accuracy: 0.73334
+    Accuracy: 0.54331
+    Pose Loss: 0.69825
+    Pose Recall Neg: 0.47309
+    Pose Recall Pos: 0.99358
+    MCC: 0.32413
+    PR AUC: 0.68098
+    MAE: 1.17462
+    RMSE: 1.50809
+    Pearson R: 0.73683
+    Spearman Rho: 0.72437
+    C-index: 0.77360
+    EF_1pct: 3.46969
+    EF_5pct: 2.75964
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.82948
+    Loss: 1.52772
+    test_ema: Pose=0.5798, BalAcc=0.7717, PR=0.6771, Rneg=0.6001, Rpos=0.9434, MAE=1.2125, RMSE=1.5331, r=0.7287, Cidx=0.7646
+>>> Train Results - Epoch[58] <<<
+    Balanced Accuracy: 0.77318
+    Accuracy: 0.61425
+    Pose Loss: 0.60062
+    Pose Recall Neg: 0.56157
+    Pose Recall Pos: 0.98479
+    MCC: 0.36074
+    PR AUC: 0.70124
+    MAE: 0.85442
+    RMSE: 1.12010
+    Pearson R: 0.84231
+    Spearman Rho: 0.84831
+    C-index: 0.83086
+    EF_1pct: 2.61393
+    EF_5pct: 1.82764
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.52860
+    Loss: 1.12922
+    Epoch Time: 103.74791
+    Elapsed Time: 5994.82204
+    lr: 0.000824
+    train_ema: Pose=0.5788, BalAcc=0.7800, PR=0.6818, Rneg=0.5983, Rpos=0.9616, MAE=0.9203, RMSE=1.1937, r=0.8257, Cidx=0.8202
+>>> Test Results - Epoch[58] <<<
+    Balanced Accuracy: 0.76482
+    Accuracy: 0.61888
+    Pose Loss: 0.61327
+    Pose Recall Neg: 0.56496
+    Pose Recall Pos: 0.96469
+    MCC: 0.36191
+    PR AUC: 0.69923
+    MAE: 1.15726
+    RMSE: 1.47348
+    Pearson R: 0.74171
+    Spearman Rho: 0.71524
+    C-index: 0.76988
+    EF_1pct: 3.94283
+    EF_5pct: 2.47084
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.79994
+    Loss: 1.41321
+    test_ema: Pose=0.5898, BalAcc=0.7697, PR=0.6837, Rneg=0.5895, Rpos=0.9498, MAE=1.1959, RMSE=1.5152, r=0.7326, Cidx=0.7662
+  [DEBUG] Grad norms:
+    backbone: 0.1150
+    pose_local: 0.0162
+    pose_geometry: 0.0070
+    pose_local_proj: 0.0200
+    pose_norm: 0.0023
+    pose_fusion: 0.0086
+    pose_head: 0.0364
+    aff_local: 0.0530
+    tokenizer: 0.0001
+    transformer_layers: 0.0005
+    transformer_norm: 0.0009
+    aff_global_proj: 0.1392
+    aff_token_proj: 0.0056
+    aff_fusion: 0.0185
+    affinity_head: 0.0758
+>>> Train Results - Epoch[60] <<<
+    Balanced Accuracy: 0.81140
+    Accuracy: 0.68069
+    Pose Loss: 0.54048
+    Pose Recall Neg: 0.63737
+    Pose Recall Pos: 0.98543
+    MCC: 0.41416
+    PR AUC: 0.73444
+    MAE: 0.97547
+    RMSE: 1.27598
+    Pearson R: 0.82460
+    Spearman Rho: 0.82889
+    C-index: 0.81784
+    EF_1pct: 2.42078
+    EF_5pct: 1.68587
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.63602
+    Loss: 1.17650
+    Epoch Time: 103.80705
+    Elapsed Time: 6202.32420
+    lr: 0.000812
+    train_ema: Pose=0.5673, BalAcc=0.7894, PR=0.6976, Rneg=0.6100, Rpos=0.9687, MAE=0.9369, RMSE=1.2184, r=0.8253, Cidx=0.8195
+>>> Test Results - Epoch[60] <<<
+    Balanced Accuracy: 0.79951
+    Accuracy: 0.66717
+    Pose Loss: 0.55245
+    Pose Recall Neg: 0.61827
+    Pose Recall Pos: 0.98074
+    MCC: 0.41043
+    PR AUC: 0.70877
+    MAE: 1.18166
+    RMSE: 1.57058
+    Pearson R: 0.73410
+    Spearman Rho: 0.71947
+    C-index: 0.76978
+    EF_1pct: 3.31198
+    EF_5pct: 2.75964
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.81962
+    Loss: 1.37206
+    test_ema: Pose=0.5786, BalAcc=0.7786, PR=0.6912, Rneg=0.5982, Rpos=0.9591, MAE=1.1917, RMSE=1.5318, r=0.7330, Cidx=0.7673
+>>> Train Results - Epoch[62] <<<
+    Balanced Accuracy: 0.83731
+    Accuracy: 0.73487
+    Pose Loss: 0.49891
+    Pose Recall Neg: 0.70092
+    Pose Recall Pos: 0.97370
+    MCC: 0.45810
+    PR AUC: 0.73595
+    MAE: 1.01802
+    RMSE: 1.30393
+    Pearson R: 0.80015
+    Spearman Rho: 0.79826
+    C-index: 0.80254
+    EF_1pct: 2.45941
+    EF_5pct: 1.66524
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.67048
+    Loss: 1.16938
+    Epoch Time: 103.75728
+    Elapsed Time: 6409.85520
+    lr: 0.000799
+    train_ema: Pose=0.5468, BalAcc=0.8038, PR=0.7091, Rneg=0.6373, Rpos=0.9702, MAE=0.9612, RMSE=1.2441, r=0.8178, Cidx=0.8144
+>>> Test Results - Epoch[62] <<<
+    Balanced Accuracy: 0.82386
+    Accuracy: 0.73040
+    Pose Loss: 0.49905
+    Pose Recall Neg: 0.69587
+    Pose Recall Pos: 0.95185
+    MCC: 0.45335
+    PR AUC: 0.69862
+    MAE: 1.27112
+    RMSE: 1.62092
+    Pearson R: 0.71205
+    Spearman Rho: 0.69483
+    C-index: 0.76130
+    EF_1pct: 3.62740
+    EF_5pct: 2.37457
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.92250
+    Loss: 1.42155
+    test_ema: Pose=0.5547, BalAcc=0.7922, PR=0.6934, Rneg=0.6275, Rpos=0.9569, MAE=1.2155, RMSE=1.5586, r=0.7267, Cidx=0.7655
+>>> Train Results - Epoch[64] <<<
+    Balanced Accuracy: 0.82597
+    Accuracy: 0.71887
+    Pose Loss: 0.50301
+    Pose Recall Neg: 0.68338
+    Pose Recall Pos: 0.96855
+    MCC: 0.43970
+    PR AUC: 0.71083
+    MAE: 0.88612
+    RMSE: 1.15141
+    Pearson R: 0.84249
+    Spearman Rho: 0.85407
+    C-index: 0.83552
+    EF_1pct: 3.28351
+    EF_5pct: 1.93849
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.55449
+    Loss: 1.05750
+    Epoch Time: 103.74180
+    Elapsed Time: 6617.49724
+    lr: 0.000786
+    train_ema: Pose=0.5336, BalAcc=0.8104, PR=0.7096, Rneg=0.6511, Rpos=0.9697, MAE=0.9387, RMSE=1.2163, r=0.8252, Cidx=0.8207
+>>> Test Results - Epoch[64] <<<
+    Balanced Accuracy: 0.79897
+    Accuracy: 0.68969
+    Pose Loss: 0.52896
+    Pose Recall Neg: 0.64931
+    Pose Recall Pos: 0.94864
+    MCC: 0.41245
+    PR AUC: 0.67614
+    MAE: 1.17274
+    RMSE: 1.45981
+    Pearson R: 0.75902
+    Spearman Rho: 0.73946
+    C-index: 0.77688
+    EF_1pct: 3.78512
+    EF_5pct: 2.82382
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.80530
+    Loss: 1.33426
+    test_ema: Pose=0.5470, BalAcc=0.7942, PR=0.6883, Rneg=0.6340, Rpos=0.9544, MAE=1.2027, RMSE=1.5289, r=0.7364, Cidx=0.7689
+>>> Train Results - Epoch[66] <<<
+    Balanced Accuracy: 0.78201
+    Accuracy: 0.62379
+    Pose Loss: 0.60641
+    Pose Recall Neg: 0.57136
+    Pose Recall Pos: 0.99265
+    MCC: 0.37236
+    PR AUC: 0.73183
+    MAE: 1.00341
+    RMSE: 1.29513
+    Pearson R: 0.80296
+    Spearman Rho: 0.80100
+    C-index: 0.80464
+    EF_1pct: 2.94872
+    EF_5pct: 1.98231
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.66551
+    Loss: 1.27192
+    Epoch Time: 103.70814
+    Elapsed Time: 6824.90249
+    lr: 0.000773
+    train_ema: Pose=0.5555, BalAcc=0.8019, PR=0.7163, Rneg=0.6272, Rpos=0.9766, MAE=0.9581, RMSE=1.2399, r=0.8185, Cidx=0.8159
+>>> Test Results - Epoch[66] <<<
+    Balanced Accuracy: 0.76604
+    Accuracy: 0.61044
+    Pose Loss: 0.62504
+    Pose Recall Neg: 0.55294
+    Pose Recall Pos: 0.97913
+    MCC: 0.36380
+    PR AUC: 0.71730
+    MAE: 1.31983
+    RMSE: 1.67278
+    Pearson R: 0.67729
+    Spearman Rho: 0.66082
+    C-index: 0.74272
+    EF_1pct: 3.94283
+    EF_5pct: 2.47084
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.97117
+    Loss: 1.59621
+    test_ema: Pose=0.5704, BalAcc=0.7858, PR=0.6970, Rneg=0.6097, Rpos=0.9618, MAE=1.2378, RMSE=1.5721, r=0.7187, Cidx=0.7610
+>>> Train Results - Epoch[68] <<<
+    Balanced Accuracy: 0.81723
+    Accuracy: 0.69080
+    Pose Loss: 0.50771
+    Pose Recall Neg: 0.64890
+    Pose Recall Pos: 0.98556
+    MCC: 0.42303
+    PR AUC: 0.72664
+    MAE: 0.86661
+    RMSE: 1.11621
+    Pearson R: 0.85728
+    Spearman Rho: 0.86423
+    C-index: 0.83942
+    EF_1pct: 2.74269
+    EF_5pct: 1.57244
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.53722
+    Loss: 1.04494
+    Epoch Time: 103.49290
+    Elapsed Time: 7032.11957
+    lr: 0.000759
+    train_ema: Pose=0.5411, BalAcc=0.8065, PR=0.7194, Rneg=0.6337, Rpos=0.9793, MAE=0.9307, RMSE=1.2028, r=0.8302, Cidx=0.8230
+>>> Test Results - Epoch[68] <<<
+    Balanced Accuracy: 0.78854
+    Accuracy: 0.66696
+    Pose Loss: 0.52630
+    Pose Recall Neg: 0.62203
+    Pose Recall Pos: 0.95506
+    MCC: 0.39584
+    PR AUC: 0.70814
+    MAE: 1.16558
+    RMSE: 1.48163
+    Pearson R: 0.76996
+    Spearman Rho: 0.74821
+    C-index: 0.78354
+    EF_1pct: 3.31198
+    EF_5pct: 2.75964
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.78997
+    Loss: 1.31627
+    test_ema: Pose=0.5572, BalAcc=0.7866, PR=0.7003, Rneg=0.6134, Rpos=0.9598, MAE=1.2161, RMSE=1.5449, r=0.7341, Cidx=0.7678
+  [DEBUG] Grad norms:
+    backbone: 0.0823
+    pose_local: 0.0131
+    pose_geometry: 0.0067
+    pose_local_proj: 0.0183
+    pose_norm: 0.0027
+    pose_fusion: 0.0097
+    pose_head: 0.0210
+    aff_local: 0.0584
+    tokenizer: 0.0000
+    transformer_layers: 0.0002
+    transformer_norm: 0.0016
+    aff_global_proj: 0.1373
+    aff_token_proj: 0.0088
+    aff_fusion: 0.0586
+    affinity_head: 0.2482
+>>> Train Results - Epoch[70] <<<
+    Balanced Accuracy: 0.80097
+    Accuracy: 0.66127
+    Pose Loss: 0.58408
+    Pose Recall Neg: 0.61497
+    Pose Recall Pos: 0.98698
+    MCC: 0.39869
+    PR AUC: 0.72822
+    MAE: 0.79191
+    RMSE: 1.03145
+    Pearson R: 0.86701
+    Spearman Rho: 0.87109
+    C-index: 0.84158
+    EF_1pct: 2.61393
+    EF_5pct: 2.15760
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.47025
+    Loss: 1.05432
+    Epoch Time: 103.83704
+    Elapsed Time: 7239.72906
+    lr: 0.000745
+    train_ema: Pose=0.5540, BalAcc=0.8048, PR=0.7220, Rneg=0.6281, Rpos=0.9816, MAE=0.8890, RMSE=1.1514, r=0.8412, Cidx=0.8286
+>>> Test Results - Epoch[70] <<<
+    Balanced Accuracy: 0.78008
+    Accuracy: 0.63707
+    Pose Loss: 0.60861
+    Pose Recall Neg: 0.58423
+    Pose Recall Pos: 0.97592
+    MCC: 0.38278
+    PR AUC: 0.69850
+    MAE: 1.13939
+    RMSE: 1.45779
+    Pearson R: 0.75267
+    Spearman Rho: 0.73467
+    C-index: 0.77580
+    EF_1pct: 4.10054
+    EF_5pct: 2.82382
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.77577
+    Loss: 1.38438
+    test_ema: Pose=0.5726, BalAcc=0.7846, PR=0.6998, Rneg=0.6046, Rpos=0.9646, MAE=1.1931, RMSE=1.5188, r=0.7396, Cidx=0.7702
+>>> Train Results - Epoch[72] <<<
+    Balanced Accuracy: 0.81735
+    Accuracy: 0.68984
+    Pose Loss: 0.52889
+    Pose Recall Neg: 0.64758
+    Pose Recall Pos: 0.98711
+    MCC: 0.42302
+    PR AUC: 0.73703
+    MAE: 0.99002
+    RMSE: 1.29468
+    Pearson R: 0.82934
+    Spearman Rho: 0.83037
+    C-index: 0.82104
+    EF_1pct: 2.67831
+    EF_5pct: 1.61369
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.65261
+    Loss: 1.18150
+    Epoch Time: 103.92232
+    Elapsed Time: 7447.58026
+    lr: 0.000731
+    train_ema: Pose=0.5465, BalAcc=0.8086, PR=0.7265, Rneg=0.6339, Rpos=0.9832, MAE=0.9193, RMSE=1.1944, r=0.8376, Cidx=0.8263
+>>> Test Results - Epoch[72] <<<
+    Balanced Accuracy: 0.79588
+    Accuracy: 0.67497
+    Pose Loss: 0.54263
+    Pose Recall Neg: 0.63029
+    Pose Recall Pos: 0.96148
+    MCC: 0.40640
+    PR AUC: 0.71434
+    MAE: 1.28539
+    RMSE: 1.63597
+    Pearson R: 0.71807
+    Spearman Rho: 0.71196
+    C-index: 0.76474
+    EF_1pct: 3.31198
+    EF_5pct: 2.05369
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.92457
+    Loss: 1.46720
+    test_ema: Pose=0.5636, BalAcc=0.7880, PR=0.7041, Rneg=0.6123, Rpos=0.9637, MAE=1.2208, RMSE=1.5540, r=0.7332, Cidx=0.7686
+>>> Train Results - Epoch[74] <<<
+    Balanced Accuracy: 0.82997
+    Accuracy: 0.71640
+    Pose Loss: 0.49014
+    Pose Recall Neg: 0.67877
+    Pose Recall Pos: 0.98118
+    MCC: 0.44407
+    PR AUC: 0.74157
+    MAE: 0.80265
+    RMSE: 1.05285
+    Pearson R: 0.85945
+    Spearman Rho: 0.86172
+    C-index: 0.83870
+    EF_1pct: 2.34352
+    EF_5pct: 1.63431
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.48003
+    Loss: 0.97017
+    Epoch Time: 103.80528
+    Elapsed Time: 7655.33810
+    lr: 0.000717
+    train_ema: Pose=0.5296, BalAcc=0.8150, PR=0.7310, Rneg=0.6474, Rpos=0.9826, MAE=0.8843, RMSE=1.1519, r=0.8442, Cidx=0.8300
+>>> Test Results - Epoch[74] <<<
+    Balanced Accuracy: 0.80497
+    Accuracy: 0.69186
+    Pose Loss: 0.51207
+    Pose Recall Neg: 0.65006
+    Pose Recall Pos: 0.95987
+    MCC: 0.42062
+    PR AUC: 0.72387
+    MAE: 1.11088
+    RMSE: 1.42613
+    Pearson R: 0.75939
+    Spearman Rho: 0.73542
+    C-index: 0.77412
+    EF_1pct: 3.31198
+    EF_5pct: 2.66337
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.76220
+    Loss: 1.27427
+    test_ema: Pose=0.5482, BalAcc=0.7931, PR=0.7101, Rneg=0.6237, Rpos=0.9625, MAE=1.1878, RMSE=1.5156, r=0.7410, Cidx=0.7702
+>>> Train Results - Epoch[76] <<<
+    Balanced Accuracy: 0.78970
+    Accuracy: 0.63940
+    Pose Loss: 0.56773
+    Pose Recall Neg: 0.58959
+    Pose Recall Pos: 0.98982
+    MCC: 0.38276
+    PR AUC: 0.71054
+    MAE: 0.78375
+    RMSE: 1.02249
+    Pearson R: 0.87751
+    Spearman Rho: 0.88013
+    C-index: 0.84940
+    EF_1pct: 2.53667
+    EF_5pct: 1.77609
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.46089
+    Loss: 1.02862
+    Epoch Time: 103.96195
+    Elapsed Time: 7863.14048
+    lr: 0.000702
+    train_ema: Pose=0.5410, BalAcc=0.8074, PR=0.7249, Rneg=0.6300, Rpos=0.9848, MAE=0.8542, RMSE=1.1131, r=0.8542, Cidx=0.8358
+>>> Test Results - Epoch[76] <<<
+    Balanced Accuracy: 0.75489
+    Accuracy: 0.59701
+    Pose Loss: 0.61179
+    Pose Recall Neg: 0.53867
+    Pose Recall Pos: 0.97111
+    MCC: 0.34894
+    PR AUC: 0.69150
+    MAE: 1.16692
+    RMSE: 1.48800
+    Pearson R: 0.73829
+    Spearman Rho: 0.71888
+    C-index: 0.77004
+    EF_1pct: 3.94283
+    EF_5pct: 2.59920
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.80649
+    Loss: 1.41828
+    test_ema: Pose=0.5672, BalAcc=0.7816, PR=0.7045, Rneg=0.5982, Rpos=0.9651, MAE=1.1816, RMSE=1.5073, r=0.7402, Cidx=0.7702
+>>> Train Results - Epoch[78] <<<
+    Balanced Accuracy: 0.75292
+    Accuracy: 0.56918
+    Pose Loss: 0.64647
+    Pose Recall Neg: 0.50829
+    Pose Recall Pos: 0.99755
+    MCC: 0.33597
+    PR AUC: 0.72320
+    MAE: 0.80751
+    RMSE: 1.06912
+    Pearson R: 0.87067
+    Spearman Rho: 0.87514
+    C-index: 0.84662
+    EF_1pct: 2.48516
+    EF_5pct: 2.08800
+    Success_at_1: 0.00000
+    Success_at_5: 0.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.48832
+    Loss: 1.13478
+    Epoch Time: 103.70462
+    Elapsed Time: 8070.67392
+    lr: 0.000688
+    train_ema: Pose=0.5727, BalAcc=0.7911, PR=0.7244, Rneg=0.5935, Rpos=0.9886, MAE=0.8402, RMSE=1.0999, r=0.8591, Cidx=0.8391
+>>> Test Results - Epoch[78] <<<
+    Balanced Accuracy: 0.73916
+    Accuracy: 0.56042
+    Pose Loss: 0.66824
+    Pose Recall Neg: 0.49437
+    Pose Recall Pos: 0.98395
+    MCC: 0.33007
+    PR AUC: 0.68452
+    MAE: 1.16130
+    RMSE: 1.48613
+    Pearson R: 0.74279
+    Spearman Rho: 0.73358
+    C-index: 0.77960
+    EF_1pct: 4.73140
+    EF_5pct: 2.98426
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.80412
+    Loss: 1.47236
+    test_ema: Pose=0.5975, BalAcc=0.7689, PR=0.6985, Rneg=0.5670, Rpos=0.9708, MAE=1.1755, RMSE=1.5010, r=0.7410, Cidx=0.7730
+  [DEBUG] Grad norms:
+    backbone: 0.0904
+    pose_local: 0.0083
+    pose_geometry: 0.0038
+    pose_local_proj: 0.0089
+    pose_norm: 0.0028
+    pose_fusion: 0.0048
+    pose_head: 0.0254
+    aff_local: 0.0627
+    tokenizer: 0.0000
+    transformer_layers: 0.0006
+    transformer_norm: 0.0023
+    aff_global_proj: 0.1430
+    aff_token_proj: 0.0118
+    aff_fusion: 0.0297
+    affinity_head: 0.1021
+>>> Train Results - Epoch[80] <<<
+    Balanced Accuracy: 0.82824
+    Accuracy: 0.71570
+    Pose Loss: 0.51769
+    Pose Recall Neg: 0.67840
+    Pose Recall Pos: 0.97809
+    MCC: 0.44175
+    PR AUC: 0.74500
+    MAE: 0.78018
+    RMSE: 1.02215
+    Pearson R: 0.87009
+    Spearman Rho: 0.87385
+    C-index: 0.84642
+    EF_1pct: 2.85858
+    EF_5pct: 1.79156
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.45739
+    Loss: 0.97508
+    Epoch Time: 103.74819
+    Elapsed Time: 8278.13679
+    lr: 0.000673
+    train_ema: Pose=0.5562, BalAcc=0.8022, PR=0.7306, Rneg=0.6190, Rpos=0.9855, MAE=0.8222, RMSE=1.0766, r=0.8624, Cidx=0.8413
+>>> Test Results - Epoch[80] <<<
+    Balanced Accuracy: 0.80046
+    Accuracy: 0.68406
+    Pose Loss: 0.54603
+    Pose Recall Neg: 0.64105
+    Pose Recall Pos: 0.95987
+    MCC: 0.41357
+    PR AUC: 0.70644
+    MAE: 1.16050
+    RMSE: 1.50608
+    Pearson R: 0.75086
+    Spearman Rho: 0.72166
+    C-index: 0.77238
+    EF_1pct: 2.99655
+    EF_5pct: 2.24622
+    Success_at_1: 0.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.79625
+    Loss: 1.34228
+    test_ema: Pose=0.5821, BalAcc=0.7784, PR=0.7009, Rneg=0.5892, Rpos=0.9675, MAE=1.1710, RMSE=1.5025, r=0.7439, Cidx=0.7728
+>>> Train Results - Epoch[82] <<<
+    Balanced Accuracy: 0.79751
+    Accuracy: 0.65045
+    Pose Loss: 0.57561
+    Pose Recall Neg: 0.60172
+    Pose Recall Pos: 0.99330
+    MCC: 0.39343
+    PR AUC: 0.73863
+    MAE: 0.81562
+    RMSE: 1.05707
+    Pearson R: 0.85806
+    Spearman Rho: 0.85941
+    C-index: 0.83890
+    EF_1pct: 2.84570
+    EF_5pct: 1.88178
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.48305
+    Loss: 1.05866
+    Epoch Time: 103.65571
+    Elapsed Time: 8485.43902
+    lr: 0.000658
+    train_ema: Pose=0.5620, BalAcc=0.8008, PR=0.7330, Rneg=0.6138, Rpos=0.9878, MAE=0.8202, RMSE=1.0707, r=0.8611, Cidx=0.8406
+>>> Test Results - Epoch[82] <<<
+    Balanced Accuracy: 0.77497
+    Accuracy: 0.62473
+    Pose Loss: 0.59084
+    Pose Recall Neg: 0.56921
+    Pose Recall Pos: 0.98074
+    MCC: 0.37577
+    PR AUC: 0.72220
+    MAE: 1.22516
+    RMSE: 1.58762
+    Pearson R: 0.69295
+    Spearman Rho: 0.68335
+    C-index: 0.75332
+    EF_1pct: 3.94283
+    EF_5pct: 2.88799
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.85725
+    Loss: 1.44810
+    test_ema: Pose=0.5847, BalAcc=0.7773, PR=0.7073, Rneg=0.5832, Rpos=0.9715, MAE=1.1872, RMSE=1.5280, r=0.7286, Cidx=0.7670
+>>> Train Results - Epoch[84] <<<
+    Balanced Accuracy: 0.84566
+    Accuracy: 0.74048
+    Pose Loss: 0.45449
+    Pose Recall Neg: 0.70563
+    Pose Recall Pos: 0.98569
+    MCC: 0.47005
+    PR AUC: 0.76494
+    MAE: 0.86065
+    RMSE: 1.12104
+    Pearson R: 0.86189
+    Spearman Rho: 0.86099
+    C-index: 0.84238
+    EF_1pct: 2.91009
+    EF_5pct: 1.75031
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.53280
+    Loss: 0.98729
+    Epoch Time: 103.66292
+    Elapsed Time: 8692.71757
+    lr: 0.000642
+    train_ema: Pose=0.5297, BalAcc=0.8143, PR=0.7426, Rneg=0.6414, Rpos=0.9872, MAE=0.8323, RMSE=1.0858, r=0.8613, Cidx=0.8411
+>>> Test Results - Epoch[84] <<<
+    Balanced Accuracy: 0.81704
+    Accuracy: 0.70572
+    Pose Loss: 0.49321
+    Pose Recall Neg: 0.66458
+    Pose Recall Pos: 0.96950
+    MCC: 0.43875
+    PR AUC: 0.74701
+    MAE: 1.20693
+    RMSE: 1.52488
+    Pearson R: 0.73583
+    Spearman Rho: 0.71551
+    C-index: 0.76652
+    EF_1pct: 2.99655
+    EF_5pct: 2.47084
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.83618
+    Loss: 1.32940
+    test_ema: Pose=0.5573, BalAcc=0.7893, PR=0.7192, Rneg=0.6076, Rpos=0.9709, MAE=1.1931, RMSE=1.5271, r=0.7308, Cidx=0.7668
+>>> Train Results - Epoch[86] <<<
+    Balanced Accuracy: 0.80142
+    Accuracy: 0.65876
+    Pose Loss: 0.54304
+    Pose Recall Neg: 0.61148
+    Pose Recall Pos: 0.99136
+    MCC: 0.39906
+    PR AUC: 0.74451
+    MAE: 0.73987
+    RMSE: 0.97465
+    Pearson R: 0.88900
+    Spearman Rho: 0.89289
+    C-index: 0.86210
+    EF_1pct: 2.54955
+    EF_5pct: 1.67813
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.42304
+    Loss: 0.96608
+    Epoch Time: 103.67774
+    Elapsed Time: 8900.10805
+    lr: 0.000627
+    train_ema: Pose=0.5337, BalAcc=0.8104, PR=0.7432, Rneg=0.6324, Rpos=0.9884, MAE=0.8046, RMSE=1.0525, r=0.8696, Cidx=0.8474
+>>> Test Results - Epoch[86] <<<
+    Balanced Accuracy: 0.77380
+    Accuracy: 0.62386
+    Pose Loss: 0.57988
+    Pose Recall Neg: 0.56846
+    Pose Recall Pos: 0.97913
+    MCC: 0.37416
+    PR AUC: 0.69078
+    MAE: 1.15378
+    RMSE: 1.50300
+    Pearson R: 0.74860
+    Spearman Rho: 0.73793
+    C-index: 0.77810
+    EF_1pct: 3.46969
+    EF_5pct: 2.53502
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.79497
+    Loss: 1.37485
+    test_ema: Pose=0.5640, BalAcc=0.7846, PR=0.7107, Rneg=0.5959, Rpos=0.9734, MAE=1.1813, RMSE=1.5199, r=0.7361, Cidx=0.7702
+>>> Train Results - Epoch[88] <<<
+    Balanced Accuracy: 0.88229
+    Accuracy: 0.85486
+    Pose Loss: 0.30053
+    Pose Recall Neg: 0.84578
+    Pose Recall Pos: 0.91879
+    MCC: 0.58335
+    PR AUC: 0.75220
+    MAE: 0.81828
+    RMSE: 1.07028
+    Pearson R: 0.87495
+    Spearman Rho: 0.87759
+    C-index: 0.85016
+    EF_1pct: 2.35640
+    EF_5pct: 1.54409
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.49029
+    Loss: 0.79082
+    Epoch Time: 103.65239
+    Elapsed Time: 9107.38282
+    lr: 0.000611
+    train_ema: Pose=0.4638, BalAcc=0.8320, PR=0.7459, Rneg=0.6964, Rpos=0.9675, MAE=0.8087, RMSE=1.0578, r=0.8712, Cidx=0.8482
+>>> Test Results - Epoch[88] <<<
+    Balanced Accuracy: 0.84514
+    Accuracy: 0.82113
+    Pose Loss: 0.32689
+    Pose Recall Neg: 0.81227
+    Pose Recall Pos: 0.87801
+    MCC: 0.52471
+    PR AUC: 0.71319
+    MAE: 1.19346
+    RMSE: 1.55828
+    Pearson R: 0.74644
+    Spearman Rho: 0.72002
+    C-index: 0.76974
+    EF_1pct: 2.68112
+    EF_5pct: 2.34248
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.83030
+    Loss: 1.15719
+    test_ema: Pose=0.4929, BalAcc=0.8028, PR=0.7114, Rneg=0.6608, Rpos=0.9448, MAE=1.1850, RMSE=1.5314, r=0.7392, Cidx=0.7701
+  [DEBUG] Grad norms:
+    backbone: 0.0674
+    pose_local: 0.0110
+    pose_geometry: 0.0053
+    pose_local_proj: 0.0217
+    pose_norm: 0.0021
+    pose_fusion: 0.0059
+    pose_head: 0.0223
+    aff_local: 0.0416
+    tokenizer: 0.0001
+    transformer_layers: 0.0004
+    transformer_norm: 0.0009
+    aff_global_proj: 0.0975
+    aff_token_proj: 0.0072
+    aff_fusion: 0.0398
+    affinity_head: 0.2015
+>>> Train Results - Epoch[90] <<<
+    Balanced Accuracy: 0.88170
+    Accuracy: 0.82799
+    Pose Loss: 0.34195
+    Pose Recall Neg: 0.81019
+    Pose Recall Pos: 0.95321
+    MCC: 0.55836
+    PR AUC: 0.77040
+    MAE: 0.70896
+    RMSE: 0.93238
+    Pearson R: 0.89339
+    Spearman Rho: 0.89530
+    C-index: 0.85862
+    EF_1pct: 2.53667
+    EF_5pct: 2.00036
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.40015
+    Loss: 0.74210
+    Epoch Time: 103.65136
+    Elapsed Time: 9314.71377
+    lr: 0.000596
+    train_ema: Pose=0.4272, BalAcc=0.8469, PR=0.7532, Rneg=0.7305, Rpos=0.9632, MAE=0.7788, RMSE=1.0202, r=0.8779, Cidx=0.8513
+>>> Test Results - Epoch[90] <<<
+    Balanced Accuracy: 0.83803
+    Accuracy: 0.78540
+    Pose Loss: 0.38384
+    Pose Recall Neg: 0.76596
+    Pose Recall Pos: 0.91011
+    MCC: 0.49302
+    PR AUC: 0.70471
+    MAE: 1.13937
+    RMSE: 1.43677
+    Pearson R: 0.75655
+    Spearman Rho: 0.73244
+    C-index: 0.77508
+    EF_1pct: 2.83884
+    EF_5pct: 2.59920
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.77337
+    Loss: 1.15721
+    test_ema: Pose=0.4602, BalAcc=0.8134, PR=0.7094, Rneg=0.6923, Rpos=0.9344, MAE=1.1713, RMSE=1.5030, r=0.7444, Cidx=0.7716
+>>> Train Results - Epoch[92] <<<
+    Balanced Accuracy: 0.83114
+    Accuracy: 0.71321
+    Pose Loss: 0.47675
+    Pose Recall Neg: 0.67413
+    Pose Recall Pos: 0.98814
+    MCC: 0.44478
+    PR AUC: 0.75751
+    MAE: 0.97364
+    RMSE: 1.27306
+    Pearson R: 0.84218
+    Spearman Rho: 0.84257
+    C-index: 0.82510
+    EF_1pct: 2.02161
+    EF_5pct: 1.36107
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.63813
+    Loss: 1.11488
+    Epoch Time: 103.70360
+    Elapsed Time: 9522.11392
+    lr: 0.000580
+    train_ema: Pose=0.4421, BalAcc=0.8422, PR=0.7545, Rneg=0.7136, Rpos=0.9707, MAE=0.8372, RMSE=1.0960, r=0.8672, Cidx=0.8435
+>>> Test Results - Epoch[92] <<<
+    Balanced Accuracy: 0.78923
+    Accuracy: 0.66111
+    Pose Loss: 0.52898
+    Pose Recall Neg: 0.61377
+    Pose Recall Pos: 0.96469
+    MCC: 0.39624
+    PR AUC: 0.70488
+    MAE: 1.33684
+    RMSE: 1.72031
+    Pearson R: 0.73935
+    Spearman Rho: 0.72323
+    C-index: 0.77178
+    EF_1pct: 2.99655
+    EF_5pct: 2.92008
+    Success_at_1: 1.00000
+    Success_at_5: 1.00000
+    Success_at_10: 1.00000
+    Affinity Loss: 0.95683
+    Loss: 1.48581
+    test_ema: Pose=0.4808, BalAcc=0.8061, PR=0.7081, Rneg=0.6688, Rpos=0.9435, MAE=1.2210, RMSE=1.5682, r=0.7429, Cidx=0.7716
+Early stopping triggered at epoch 92: no composite_cidx_balacc improvement for 25 evals

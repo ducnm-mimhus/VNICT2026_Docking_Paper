@@ -48,6 +48,10 @@ DISPLAY_COLUMNS = [
     "PR AUC", "MAE", "RMSE", "Pearson R", "Spearman Rho", "C-index",
 ]
 
+# B1/B2 (VD10) khong nam trong BENCHMARK_MODELS chinh thuc cua dockbench.models —
+# tu them vao day, chi quet neu thu muc thuc su ton tai (khong bat buoc phai co).
+ABLATION_MODELS = ("geoformerdock_uncertainty", "geoformerdock_nobalance")
+
 
 def read_csv_rows(path: Path) -> List[Dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as fh:
@@ -88,7 +92,8 @@ def main() -> None:
 
     tsv_rows = []
 
-    for model_key in BENCHMARK_MODELS:
+    extra_models = [m for m in ABLATION_MODELS if (args.models_dir / m).is_dir()]
+    for model_key in list(BENCHMARK_MODELS) + extra_models:
         display = MODEL_DISPLAY_NAMES.get(model_key, model_key)
         model_dir = args.models_dir / model_key
         train_csv = model_dir / "training_metrics_train.csv"

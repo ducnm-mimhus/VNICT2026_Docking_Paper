@@ -1,0 +1,25 @@
+% Sinh tu dong boi tools/checkpoint_robustness.py — KHONG sua tay.
+% min_epoch=70, models=geoformerdock,pafnucy,gnina_dense,gnina_default2018
+% Dan nguyen khoi nay vao Overleaf, ngay sau doan paired bootstrap
+% phan loai o Muc IV.C (truoc \textit{D. Phan tich danh doi}).
+\begin{table}[!t]
+\centering
+\caption{Khoảng giá trị (min–max) và biên độ dao động của BalAcc và PR-AUC trên các checkpoint từ epoch 70 đến 100 ($N=16$ lần đánh giá cuối, đánh giá mỗi 2 epoch).}
+\label{tab:checkpoint_stability}
+\footnotesize
+\begin{tabular}{l ccc}
+\hline
+\textbf{Mô hình} & \textbf{BalAcc [min, max]} & \textbf{Biên độ} \\
+ & \textbf{PR-AUC [min, max]} & \textbf{Biên độ} \\
+\hline
+\textbf{GeoFormerDock} & [0.643, 0.829] & 0.187 \\
+ & [0.586, 0.646] & 0.060 \\
+Pafnucy & [0.695, 0.790] & 0.095 \\
+ & [0.495, 0.562] & 0.067 \\
+GNINA-Ds & [0.586, 0.787] & 0.201 \\
+ & [0.443, 0.519] & 0.076 \\
+GNINA-D18 & [0.656, 0.761] & 0.105 \\
+ & [0.452, 0.491] & 0.040 \\
+\hline
+\end{tabular}
+\end{table}

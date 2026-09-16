@@ -1,0 +1,36 @@
+==============================================================================
+BIEN DO (spread = max - min) tren cac lan danh gia co Epoch >= 70
+==============================================================================
+
+--- Balanced Accuracy ---
+  GeoFormerDock                n=16  [0.6428, 0.8295]  bien do=0.1867  mean=0.7744  std=0.0513
+  Pafnucy                      n=16  [0.6949, 0.7897]  bien do=0.0948  mean=0.7615  std=0.0245
+  GNINA-Ds                     n=16  [0.5860, 0.7871]  bien do=0.2011  mean=0.7316  std=0.0494
+  GNINA-D18                    n=16  [0.6562, 0.7614]  bien do=0.1053  mean=0.7216  std=0.0291
+
+--- PR AUC ---
+  GeoFormerDock                n=16  [0.5858, 0.6459]  bien do=0.0601  mean=0.6233  std=0.0208
+  Pafnucy                      n=16  [0.4954, 0.5622]  bien do=0.0668  mean=0.5433  std=0.0184
+  GNINA-Ds                     n=16  [0.4430, 0.5192]  bien do=0.0762  mean=0.4946  std=0.0219
+  GNINA-D18                    n=16  [0.4520, 0.4915]  bien do=0.0395  mean=0.4749  std=0.0133
+
+==============================================================================
+KIEM TRA ROI NHAU — moc: GeoFormerDock (primary model)
+==============================================================================
+
+--- Balanced Accuracy ---
+  GeoFormerDock                [0.6428, 0.8295]  (moc)
+  Pafnucy                      [0.6949, 0.7897]  -> CHỒNG LẤN
+  GNINA-Ds                     [0.5860, 0.7871]  -> CHỒNG LẤN
+  GNINA-D18                    [0.6562, 0.7614]  -> CHỒNG LẤN
+  => CHỒNG LẤN VỚI ÍT NHẤT MỘT BASELINE — kết luận PHỤ THUỘC epoch được chọn (primary_min=0.6428 vs max(others)=0.7897)
+
+--- PR AUC ---
+  GeoFormerDock                [0.5858, 0.6459]  (moc)
+  Pafnucy                      [0.4954, 0.5622]  -> RỜI NHAU (primary luôn cao hơn)
+  GNINA-Ds                     [0.4430, 0.5192]  -> RỜI NHAU (primary luôn cao hơn)
+  GNINA-D18                    [0.4520, 0.4915]  -> RỜI NHAU (primary luôn cao hơn)
+  => RỜI NHAU KHỎI MỌI BASELINE — kết luận không phụ thuộc cách chọn checkpoint (primary_min=0.5858 vs max(others)=0.5622)
+
+Da ghi: results/logs/checkpoint_robustness.tsv
+Da ghi (dan thang vao Overleaf): results/logs/table3_stability.tex

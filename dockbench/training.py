@@ -166,6 +166,12 @@ def options(args: Optional[List[str]] = None):
     # Data
     parser.add_argument("trainfile", type=str, help="Training file")
     parser.add_argument("--testfile", type=str, default=None, help="Test file")
+    parser.add_argument("--valfile", type=str, default=None,
+                        help="Validation file (held out, cluster-split from train). "
+                             "If given, checkpoint selection/early stopping use THIS "
+                             "instead of --testfile, keeping the test set untouched "
+                             "until final reporting. If omitted, behavior is unchanged "
+                             "(selection on --testfile, as before).")
     parser.add_argument("-d", "--data_root", type=str, default="",
                         help="Root folder for relative paths in train files")
     # NOTE: --balanced is intentionally removed from this pipeline.
@@ -995,6 +1001,10 @@ def training(args):
         test_example_provider = setup.setup_example_provider(
             args.testfile, args, training=False
         )
+    if args.valfile is not None:
+        val_example_provider = setup.setup_example_provider(
+            args.valfile, args, training=False
+        )
 
     grid_maker = setup.setup_grid_maker(args)
 
@@ -1038,6 +1048,20 @@ def training(args):
             device=device,
         )
         assert test_loader.dims == train_loader.dims
+
+    if args.valfile is not None:
+        val_loader = GriddedExamplesLoader(
+            example_provider=val_example_provider,
+            grid_maker=grid_maker,
+            label_pos=args.label_pos,
+            affinity_pos=args.affinity_pos,
+            rmsd_pos=args.rmsd_pos,
+            flexlabel_pos=args.flexlabel_pos,
+            random_translation=0.0,
+            random_rotation=False,
+            device=device,
+        )
+        assert val_loader.dims == train_loader.dims
 
     affinity: bool = args.affinity_pos is not None
     flex: bool = args.flexlabel_pos is not None
@@ -1345,6 +1369,10 @@ def training(args):
     test_evaluator = _setup_evaluator(
         model, allmetrics, affinity=affinity, flex=flex, target_normalizer=target_normalizer
     )
+    if args.valfile is not None:
+        val_evaluator = _setup_evaluator(
+            model, allmetrics, affinity=affinity, flex=flex, target_normalizer=target_normalizer
+        )
 
     mlflogger.attach_output_handler(
         train_evaluator, event_name=Events.EPOCH_COMPLETED,
@@ -1563,7 +1591,24 @@ def training(args):
                 if not args.silent:
                     print(ema_msg, flush=True)
 
-            current_score = _extract_score(test_evaluator.state.metrics)
+            # Model selection / early stopping: use --valfile if given (held out from
+            # train, cluster-split by receptor) so the test set stays untouched until
+            # final reporting. If --valfile is not given, fall back to selecting on
+            # --testfile exactly as before (unchanged legacy behavior).
+            if args.valfile is not None:
+                val_evaluator.run(val_loader)
+                for outstream in outstreams:
+                    utils.log_print(
+                        val_evaluator.state.metrics,
+                        title="Val Results",
+                        epoch=trainer.state.epoch,
+                        stream=outstream,
+                    )
+                selection_metrics = val_evaluator.state.metrics
+            else:
+                selection_metrics = test_evaluator.state.metrics
+
+            current_score = _extract_score(selection_metrics)
             if best_score is None or current_score > best_score + args.early_stop_min_delta:
                 best_score = current_score
                 best_epoch = trainer.state.epoch

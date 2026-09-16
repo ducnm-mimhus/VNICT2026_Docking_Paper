@@ -1,0 +1,30 @@
+=== geoformerdock vs gnina_dense ===
+So mau (toan bo test): 4618
+A = geoformerdock.csv   B = gnina_dense.csv
+Delta = metric(A) - metric(B)   [n_boot=2000, alpha=0.05, seed=2026]
+
+metric                metric(A)  metric(B)   mean Delta     CI low    CI high  ket luan
+---------------------------------------------------------------------------------------
+balanced_accuracy        0.8295     0.7871      +0.0426    +0.0269    +0.0583  A tot hon dang ke
+pr_auc                   0.6306     0.5099      +0.1209    +0.0874    +0.1553  A tot hon dang ke
+
+=== geoformerdock vs gnina_default2018 ===
+So mau (toan bo test): 4618
+A = geoformerdock.csv   B = gnina_default2018.csv
+Delta = metric(A) - metric(B)   [n_boot=2000, alpha=0.05, seed=2026]
+
+metric                metric(A)  metric(B)   mean Delta     CI low    CI high  ket luan
+---------------------------------------------------------------------------------------
+balanced_accuracy        0.8295     0.7614      +0.0683    +0.0530    +0.0835  A tot hon dang ke
+pr_auc                   0.6306     0.4862      +0.1439    +0.1056    +0.1825  A tot hon dang ke
+
+=== geoformerdock vs pafnucy ===
+So mau (toan bo test): 4618
+A = geoformerdock.csv   B = pafnucy.csv
+Delta = metric(A) - metric(B)   [n_boot=2000, alpha=0.05, seed=2026]
+
+metric                metric(A)  metric(B)   mean Delta     CI low    CI high  ket luan
+---------------------------------------------------------------------------------------
+balanced_accuracy        0.8295     0.7897      +0.0399    +0.0237    +0.0548  A tot hon dang ke
+pr_auc                   0.6306     0.5621      +0.0682    +0.0368    +0.0992  A tot hon dang ke
+

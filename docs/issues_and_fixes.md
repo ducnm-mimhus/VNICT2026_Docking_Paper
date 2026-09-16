@@ -10,8 +10,7 @@
 > - **Thêm VĐ9–VĐ12**, trong đó **VĐ9, VĐ10, VĐ11 đều ở mức 🔴 CRITICAL** và theo đánh giá
 >   là nặng ngang hoặc nặng hơn VĐ1.
 > - VĐ1, VĐ4, VĐ5, VĐ7 được sửa lại lập luận / cách sửa cho khớp với code.
-> - **Đánh số VĐ1–VĐ8 giữ nguyên** để không phá vỡ tham chiếu trong `assignment.md` và
->   `writing_plan.md`.
+> - **Đánh số VĐ1–VĐ8 giữ nguyên** để không phá vỡ tham chiếu từ các tài liệu khác.
 
 ---
 
@@ -294,7 +293,7 @@ cân bằng minibatch, tiêu chí early stopping, seed) **giống hệt nhau**. 
 - `--max_pseudo_atoms 12` chỉ áp cho `geoformerdock` (`run_training.sh:131-132`);
 - AMP bật cho 4 mô hình CNN nặng (`run_training.sh:127-130`).
 
-→ Việc #4 trong `assignment.md` (Đức xác nhận) đã có câu trả lời: **có, dùng chung**.
+→ Đã xác nhận: **có, dùng chung**.
 
 ### Cách sửa
 
@@ -564,7 +563,7 @@ chuyển deadline lên trước ngày 6** vì Đức #8 (viết Mục IV) phụ 
 ### Mô tả
 
 `model_architecture.md` (bản 1) và `README.md` chứa một số mô tả không khớp code. Vì
-`assignment.md` giao cho Đức viết Mục III **dựa trên tài liệu kiến trúc**, các lỗi này sẽ chảy
+Mục III được viết **dựa trên tài liệu kiến trúc**, nên các lỗi này sẽ chảy
 thẳng vào bài báo nếu không chặn.
 
 `model_architecture.md` **đã được cập nhật lên bản 2** với đầy đủ tham chiếu `file:dòng` —
@@ -593,7 +592,7 @@ phần hoạt động, **không phải 5** như `README.md:96-104` mô tả.
 1. ✅ `model_architecture.md` đã cập nhật lên bản 2 — dùng bản này làm nguồn duy nhất cho Mục III.
 2. Cập nhật `README.md` các mục 5.1 và 5.2 cho khớp (xóa lịch ramp-up, sửa "5 thành phần" → 4,
    xóa tuyên bố "cùng loss" theo VĐ10).
-3. Khi Hiếu đọc phản biện Mục III (`assignment.md` việc #5), **đối chiếu từng công thức với
+3. Khi đọc phản biện Mục III, **đối chiếu từng công thức với
    phụ lục cuối `model_architecture.md`** thay vì chỉ đọc về tính dễ hiểu.
 
 ---

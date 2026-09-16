@@ -4,25 +4,23 @@ Thu muc nay chua chuong trinh thong ke du lieu CrossDocked2020/PDBbind2016 tu ca
 
 ## Cach Chay
 
-Chay tu thu muc `gnina-torch-main`:
+Chay tu thu muc goc cua repo:
 
 ```bash
-python data_plots/plot_data_statistics.py
+python3 results/data_plots/plot_data_statistics.py
 ```
 
 Mac dinh script doc:
 
 ```text
-examples/Francoeur2020/data/types/ref_uff_train0.types
-examples/Francoeur2020/data/types/ref_uff_test0.types
+data/types/ref_uff_train0.types
+data/types/ref_uff_test0.types
 ```
 
 Neu chua co du lieu, tai truoc:
 
 ```bash
-cd examples/Francoeur2020
-bash 00_download.sh
-cd ../..
+bash scripts/00_download.sh
 ```
 
 ## Dau Ra
@@ -30,7 +28,7 @@ cd ../..
 Moi lan chay se tao mot thu muc timestamp trong:
 
 ```text
-data_plots/outputs/<YYYYMMDD_HHMMSS>/
+results/data_plots/outputs/<YYYYMMDD_HHMMSS>/
 ```
 
 Trong do co:
@@ -57,9 +55,9 @@ Trong do co:
 Vi du chay voi file khac:
 
 ```bash
-python data_plots/plot_data_statistics.py \
-  --train-file examples/Francoeur2020/data/types/ref_uff_train0.types \
-  --test-file examples/Francoeur2020/data/types/ref_uff_test0.types \
+python3 results/data_plots/plot_data_statistics.py \
+  --train-file data/types/ref_uff_train0.types \
+  --test-file data/types/ref_uff_test0.types \
   --label-pos 0 \
   --affinity-pos 1
 ```
@@ -67,5 +65,5 @@ python data_plots/plot_data_statistics.py \
 Neu file `.types` co cot RMSD, them vi tri cot do:
 
 ```bash
-python data_plots/plot_data_statistics.py --rmsd-pos 2
+python3 results/data_plots/plot_data_statistics.py --rmsd-pos 2
 ```

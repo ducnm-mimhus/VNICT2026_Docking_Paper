@@ -14,3 +14,9 @@ data/
 # Logs, CSVs, audit reports, and plots under results/ ARE tracked — they are
 # small (<40MB total) and useful as a record of what each run actually produced.
 results/models/*/*.pt
+
+# IDE / tool state — khong dua vao repo public (R1-W6)
+.idea/
+.qodo/
+.cadence/
+.vscode/

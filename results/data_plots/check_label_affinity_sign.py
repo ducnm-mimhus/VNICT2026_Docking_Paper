@@ -6,7 +6,8 @@
 
 Co the chay theo 2 che do:
 
-1) Doc tu `parsed_types_rows.csv` (mac dinh, nhanh, da co san):
+1) Doc tu `parsed_types_rows.csv` (mac dinh; file nay KHONG con trong repo —
+   chay `plot_data_statistics.py` de sinh lai truoc):
        python data_plots/check_label_affinity_sign.py
 
 2) Doc truc tiep tu cac file .types:

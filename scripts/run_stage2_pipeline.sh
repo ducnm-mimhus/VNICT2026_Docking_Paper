@@ -1,7 +1,7 @@
 #!/bin/bash
 # Toan bo logic Stage 2 (inference, A1, paired bootstrap) — chay duoc tren bat ky
 # may Linux nao co GPU/CPU + data/ (khong rieng platform nao). B1/B2 (Stage 1) da
-# train xong san — xem banner dau docs/handoff_runbook.md — script nay CHI can
+# train xong san — script nay CHI can
 # checkpoint (results/models/geoformerdock_uncertainty/, .../geoformerdock_nobalance/)
 # da co san trong repo, khong can train lai.
 

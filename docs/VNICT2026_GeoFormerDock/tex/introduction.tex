@@ -1,0 +1,14 @@
+\section{Mở đầu}
+Mô phỏng liên kết protein--phối tử là một bước tính toán then chốt trong thiết kế thuốc dựa trên cấu trúc, cho phép đánh giá khả năng gắn kết của các hợp chất trước khi tiến hành thực nghiệm~\cite{dhillon2024molecular, li2024deep}. Hai nhiệm vụ cốt lõi trong quá trình này là phân loại tư thế gắn kết và dự đoán ái lực liên kết~\cite{ragoza2017protein, francoeur2020three}. Mặc dù các phương pháp học sâu trên không gian 3D đã mang lại nhiều cải tiến~\cite{stepniewska2018development, mcnutt2021gnina}, hiệu năng của các mô hình hiện có thường không đồng đều giữa hai nhiệm vụ. Bên cạnh đó, tình trạng mất cân bằng nghiêm trọng giữa tư thế tốt và tư thế nhiễu trong dữ liệu huấn luyện tiếp tục gây khó khăn cho việc xây dựng và đánh giá mô hình.
+
+
+Để giải quyết đồng thời hai vấn đề trên, nghiên cứu đề xuất GeoFormerDock, một kiến trúc học sâu đa nhiệm~\cite{caruana1997multitask} gọn nhẹ với 1.59 triệu tham số trên biểu diễn lưới voxel 3D~\cite{francoeur2020three}. Mô hình gồm một mạng cơ sở dùng chung và hai nhánh chuyên biệt: một nhánh khai thác đặc trưng hình học tường minh cho phân loại tư thế, nhánh còn lại sử dụng Transformer với cơ chế thiên vị chú ý theo khóa~\cite{vaswani2017attention} cho dự đoán ái lực. Một chiến lược nhằm giảm ảnh hưởng của mất cân bằng lớp của dữ liệu được áp dụng cho nhánh phân loại tư thế. Chi tiết kiến trúc mô hình được trình bày ở Mục III. Kết quả thực nghiệm ở Mục IV cho thấy GeoFormerDock dẫn đầu về Balanced Accuracy và PR-AUC trong các mô hình so sánh, với quy mô tham số nhỏ hơn các kiến trúc CNN chuyên biệt, trong khi hiệu năng dự đoán ái lực vẫn còn khoảng cách với baseline mạnh nhất.
+
+Để làm rõ vị trí của GeoFormerDock trong bối cảnh các hướng tiếp cận hiện có, nghiên cứu xây dựng một khung đánh giá chung cho bốn kiến trúc trên cùng biểu diễn voxel, cùng thiết lập huấn luyện và cùng bộ chỉ số. Khung này cho phép xem xét khách quan mức độ đánh đổi giữa khả năng phân loại tư thế và độ chính xác dự đoán ái lực, đồng thời tạo cơ sở thực nghiệm để so sánh GeoFormerDock với các kiến trúc khác trong cùng điều kiện dữ liệu và huấn luyện.
+
+
+Nghiên cứu mang lại hai đóng góp cụ thể:
+\begin{enumerate}
+    \item Đề xuất GeoFormerDock, một kiến trúc học sâu đa nhiệm gọn nhẹ kết hợp CNN 3D, đặc trưng hình học tường minh và cơ chế thiên vị chú ý theo khóa. Mô hình đạt vị trí không bị trội trên đường biên Pareto khi xét đồng thời hai nhiệm vụ và thể hiện ưu thế rõ rệt ở phân loại tư thế, trong khi số tham số nhỏ hơn đáng kể so với các kiến trúc CNN chuyên biệt mới nhất được so sánh.
+    \item Xây dựng khung benchmark chung cho bốn kiến trúc học sâu, cung cấp cơ sở thực nghiệm để định vị GeoFormerDock so với các hướng tiếp cận hiện có trong cùng điều kiện dữ liệu và huấn luyện.
+\end{enumerate}

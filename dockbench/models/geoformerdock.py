@@ -43,7 +43,7 @@ class VoxelTokenizer(nn.Module):
 # ---------- 2. Pocket-Aware Transformer ----------
 
 class PocketAwareAttention(nn.Module):
-    def __init__(self, embed_dim: int, num_heads: int = 4, dropout: float = 0.1):
+    def __init__(self, embed_dim: int, num_heads: int = 4, dropout: float = 0.1, use_key_bias: bool = True):
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
@@ -51,10 +51,14 @@ class PocketAwareAttention(nn.Module):
         self.qkv = nn.Linear(embed_dim, embed_dim * 3, bias=False)
         self.proj = nn.Linear(embed_dim, embed_dim)
         self.attn_drop = nn.Dropout(dropout)
-        self.pocket_gate = nn.Sequential(
-            nn.Linear(embed_dim, num_heads),
-            nn.Sigmoid(),
-        )
+        # Ablation B-5 (docs/revision_plan_reviews.md): use_key_bias=False bo hang cong
+        # B_pocket, tro ve attention chuan (khong con thien vi chu y theo khoa).
+        self.use_key_bias = use_key_bias
+        if use_key_bias:
+            self.pocket_gate = nn.Sequential(
+                nn.Linear(embed_dim, num_heads),
+                nn.Sigmoid(),
+            )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, N, D = x.shape
@@ -62,9 +66,10 @@ class PocketAwareAttention(nn.Module):
         q, k, v = qkv[0], qkv[1], qkv[2]
         attn = (q @ k.transpose(-2, -1)) * self.scale
 
-        pocket_scores = self.pocket_gate(x).permute(0, 2, 1).unsqueeze(-1)
-        pocket_bias = pocket_scores.transpose(-2, -1)
-        attn = attn + pocket_bias
+        if self.use_key_bias:
+            pocket_scores = self.pocket_gate(x).permute(0, 2, 1).unsqueeze(-1)
+            pocket_bias = pocket_scores.transpose(-2, -1)
+            attn = attn + pocket_bias
 
         attn = F.softmax(attn, dim=-1)
         attn = self.attn_drop(attn)
@@ -73,10 +78,13 @@ class PocketAwareAttention(nn.Module):
 
 
 class TransformerBlock(nn.Module):
-    def __init__(self, embed_dim: int, num_heads: int = 4, mlp_ratio: float = 2.0, dropout: float = 0.1):
+    def __init__(
+        self, embed_dim: int, num_heads: int = 4, mlp_ratio: float = 2.0, dropout: float = 0.1,
+        use_key_bias: bool = True,
+    ):
         super().__init__()
         self.norm1 = nn.LayerNorm(embed_dim)
-        self.attn = PocketAwareAttention(embed_dim, num_heads, dropout)
+        self.attn = PocketAwareAttention(embed_dim, num_heads, dropout, use_key_bias=use_key_bias)
         self.norm2 = nn.LayerNorm(embed_dim)
         mlp_hidden = int(embed_dim * mlp_ratio)
         self.mlp = nn.Sequential(
@@ -187,7 +195,25 @@ class GatedFeatureFusion(nn.Module):
         return self.norm(g * a + (1.0 - g) * b)
 
 
+class ConcatFusion(nn.Module):
+    """Ablation B-3 (docs/revision_plan_reviews.md): thay cong hop nhat (gate) bang
+    noi 2 vector roi chieu tuyen tinh — giu nguyen luong hinh hoc, chi doi cach hop nhat."""
+
+    def __init__(self, dim_a: int, dim_b: int, out_dim: int):
+        super().__init__()
+        self.proj = nn.Linear(dim_a + dim_b, out_dim)
+        self.norm = nn.LayerNorm(out_dim)
+
+    def forward(self, feat_a: torch.Tensor, feat_b: torch.Tensor) -> torch.Tensor:
+        return self.norm(self.proj(torch.cat([feat_a, feat_b], dim=-1)))
+
+
 # ---------- 7. GeoFormerDock (full model) ----------
+
+GEO_ABLATION_CHOICES = (
+    "none", "no_geometry", "concat_fusion", "no_key_bias", "simple_affinity",
+)
+
 
 class GeoFormerDock(nn.Module):
     """Hybrid voxel–graph architecture for protein–ligand scoring."""
@@ -204,11 +230,26 @@ class GeoFormerDock(nn.Module):
         patch_size: int = 4,
         dropout: float = 0.1,
         uncertainty: bool = False,
+        geo_ablation: str = "none",
     ):
         super().__init__()
         assert len(input_dims) == 4, "Input dimensions must be (channels, depth, height, width)"
+        if geo_ablation not in GEO_ABLATION_CHOICES:
+            raise ValueError(
+                f"geo_ablation phai la mot trong {GEO_ABLATION_CHOICES}, nhan duoc {geo_ablation!r}"
+            )
         self.input_dims = input_dims
         self.uncertainty = uncertainty
+
+        # Ablation (docs/revision_plan_reviews.md Muc B0): "none" tai dung Y HET kien
+        # truc goc — moi module ben duoi van duoc dung khong dieu kien khi cac co nay
+        # deu False/True nhu mac dinh, de checkpoint cu (best_model.pt) van load duoc
+        # va so tham so "none" van dung 1.594.573 nhu bao cao trong bai.
+        self.geo_ablation = geo_ablation
+        self.use_geometry = geo_ablation != "no_geometry"
+        self.use_key_bias = geo_ablation != "no_key_bias"
+        self.use_concat_fusion = geo_ablation == "concat_fusion"
+        self.use_simple_affinity = geo_ablation == "simple_affinity"
 
         C, _, _, _ = input_dims
         backbone_mid = 48
@@ -236,12 +277,17 @@ class GeoFormerDock(nn.Module):
             StableBatchNorm3d(pose_channels),
             nn.ReLU(),
         )
-        self.pose_geometry = SimpleGeometryEncoder(
-            in_channels=pose_channels,
-            out_dim=hidden_dim,
-            num_rbf=num_rbf,
-            max_atoms=max_pseudo_atoms,
-        )
+        # Ablation B-1: neu use_geometry=False, khong dung pose_geometry (bo luong
+        # hinh hoc), pose_feat = pose_local_feat. Giu NGUYEN vi tri xay dung so voi
+        # kien truc goc khi use_geometry=True (mac dinh "none") de thu tu khoi tao
+        # tham so (RNG) khong doi.
+        if self.use_geometry:
+            self.pose_geometry = SimpleGeometryEncoder(
+                in_channels=pose_channels,
+                out_dim=hidden_dim,
+                num_rbf=num_rbf,
+                max_atoms=max_pseudo_atoms,
+            )
         self.pose_gap = nn.AdaptiveAvgPool3d(1)
         self.pose_local_proj = nn.Sequential(
             nn.Linear(pose_channels, hidden_dim),
@@ -249,7 +295,14 @@ class GeoFormerDock(nn.Module):
             nn.Dropout(dropout),
         )
         self.pose_norm = nn.BatchNorm1d(hidden_dim)
-        self.pose_fusion = GatedFeatureFusion(hidden_dim, hidden_dim, hidden_dim)
+        # Ablation B-3: use_concat_fusion=True thay cong hop nhat (gate) bang noi +
+        # chieu tuyen tinh (ConcatFusion), giu nguyen luong hinh hoc. Khong xay dung
+        # gi neu use_geometry=False (B-1) — pose_fusion khong con dung toi.
+        if self.use_geometry:
+            if self.use_concat_fusion:
+                self.pose_fusion = ConcatFusion(hidden_dim, hidden_dim, hidden_dim)
+            else:
+                self.pose_fusion = GatedFeatureFusion(hidden_dim, hidden_dim, hidden_dim)
         self.pose_head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
@@ -264,24 +317,34 @@ class GeoFormerDock(nn.Module):
             nn.ReLU(),
             nn.MaxPool3d(kernel_size=2, stride=2),
         )
-        self.tokenizer = VoxelTokenizer(aff_channels, embed_dim, patch_size=patch_size)
-        self.transformer_layers = nn.ModuleList([
-            TransformerBlock(embed_dim, num_heads, mlp_ratio=2.0, dropout=dropout)
-            for _ in range(num_transformer_layers)
-        ])
-        self.transformer_norm = nn.LayerNorm(embed_dim)
+        # Ablation B-4: use_simple_affinity=True bo tokenizer + Transformer + fusion,
+        # nhanh ai luc chi con GAP + MLP (tai dung aff_global_proj lam MLP). Giu
+        # NGUYEN vi tri xay dung tokenizer/transformer_layers/transformer_norm so
+        # voi kien truc goc khi use_simple_affinity=False (mac dinh "none").
+        if not self.use_simple_affinity:
+            self.tokenizer = VoxelTokenizer(aff_channels, embed_dim, patch_size=patch_size)
+            # Ablation B-5: use_key_bias=False bo hang cong B_pocket trong tung head.
+            self.transformer_layers = nn.ModuleList([
+                TransformerBlock(
+                    embed_dim, num_heads, mlp_ratio=2.0, dropout=dropout,
+                    use_key_bias=self.use_key_bias,
+                )
+                for _ in range(num_transformer_layers)
+            ])
+            self.transformer_norm = nn.LayerNorm(embed_dim)
         self.aff_gap = nn.AdaptiveAvgPool3d(1)
         self.aff_global_proj = nn.Sequential(
             nn.Linear(aff_channels, hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout),
         )
-        self.aff_token_proj = nn.Sequential(
-            nn.Linear(embed_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-        )
-        self.aff_fusion = GatedFeatureFusion(hidden_dim, hidden_dim, hidden_dim)
+        if not self.use_simple_affinity:
+            self.aff_token_proj = nn.Sequential(
+                nn.Linear(embed_dim, hidden_dim),
+                nn.ReLU(),
+                nn.Dropout(dropout),
+            )
+            self.aff_fusion = GatedFeatureFusion(hidden_dim, hidden_dim, hidden_dim)
 
         if uncertainty:
             self.affinity_head = UncertaintyHead(hidden_dim, hidden_dim)
@@ -307,17 +370,26 @@ class GeoFormerDock(nn.Module):
         pose_vol = self.pose_local(pose_in)
         pose_local_feat = self.pose_gap(pose_vol).view(x.size(0), -1)
         pose_local_feat = self.pose_norm(self.pose_local_proj(pose_local_feat))
-        pose_geom_feat = self.pose_geometry(pose_vol)
-        pose_feat = self.pose_fusion(pose_local_feat, pose_geom_feat)
+        if self.use_geometry:
+            pose_geom_feat = self.pose_geometry(pose_vol)
+            pose_feat = self.pose_fusion(pose_local_feat, pose_geom_feat)
+        else:
+            # Ablation B-1: khong co luong hinh hoc, pose_feat = dac trung cuc bo.
+            pose_feat = pose_local_feat
 
         aff_vol = self.aff_local(aff_in)
-        tokens = self.tokenizer(aff_vol)
-        for layer in self.transformer_layers:
-            tokens = layer(tokens)
-        tokens = self.transformer_norm(tokens)
-        aff_token_feat = self.aff_token_proj(tokens.mean(dim=1))
-        aff_global_feat = self.aff_global_proj(self.aff_gap(aff_vol).view(x.size(0), -1))
-        aff_feat = self.aff_fusion(aff_token_feat, aff_global_feat)
+        if self.use_simple_affinity:
+            # Ablation B-4: GAP + MLP, bo tokenizer/Transformer/fusion.
+            tokens = None
+            aff_feat = self.aff_global_proj(self.aff_gap(aff_vol).view(x.size(0), -1))
+        else:
+            tokens = self.tokenizer(aff_vol)
+            for layer in self.transformer_layers:
+                tokens = layer(tokens)
+            tokens = self.transformer_norm(tokens)
+            aff_token_feat = self.aff_token_proj(tokens.mean(dim=1))
+            aff_global_feat = self.aff_global_proj(self.aff_gap(aff_vol).view(x.size(0), -1))
+            aff_feat = self.aff_fusion(aff_token_feat, aff_global_feat)
 
         return pose_feat, aff_feat, tokens
 

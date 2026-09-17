@@ -114,7 +114,8 @@ def build_model(
         Must match a key in ``models_dict`` (benchmark: ``True, False``).
     geoformer_kwargs
         Optional overrides for :class:`GeoFormerDock` only
-        (``max_pseudo_atoms``, ``num_transformer_layers``, ``uncertainty``).
+        (``max_pseudo_atoms``, ``num_transformer_layers``, ``uncertainty``,
+        ``geo_ablation`` — see ``GEO_ABLATION_CHOICES`` in ``geoformerdock.py``).
     """
     canonical = canonical_name(name)
     key = ModelKey(canonical, affinity, flex)

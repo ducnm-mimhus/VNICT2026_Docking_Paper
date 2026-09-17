@@ -107,11 +107,11 @@ def spearman_rho(pred: List[float], target: List[float]) -> float:
     return pearson_r(rank(pred), rank(target))
 
 
-def pose_metrics(labels: List[int], p_good: List[float]) -> dict:
-    tp = sum(1 for l, p in zip(labels, p_good) if l == 1 and p >= 0.5)
-    fn = sum(1 for l, p in zip(labels, p_good) if l == 1 and p < 0.5)
-    tn = sum(1 for l, p in zip(labels, p_good) if l == 0 and p < 0.5)
-    fp = sum(1 for l, p in zip(labels, p_good) if l == 0 and p >= 0.5)
+def pose_metrics(labels: List[int], p_good: List[float], threshold: float = 0.5) -> dict:
+    tp = sum(1 for l, p in zip(labels, p_good) if l == 1 and p >= threshold)
+    fn = sum(1 for l, p in zip(labels, p_good) if l == 1 and p < threshold)
+    tn = sum(1 for l, p in zip(labels, p_good) if l == 0 and p < threshold)
+    fp = sum(1 for l, p in zip(labels, p_good) if l == 0 and p >= threshold)
     n_pos, n_neg = tp + fn, tn + fp
     recall_pos = tp / n_pos if n_pos else float("nan")
     recall_neg = tn / n_neg if n_neg else float("nan")
@@ -138,7 +138,29 @@ def pose_metrics(labels: List[int], p_good: List[float]) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--predictions", required=True, type=Path)
+    parser.add_argument(
+        "--threshold", type=float, default=0.5,
+        help="Nguong quyet dinh cho P(good) (mac dinh 0.5 — hanh vi cu). "
+             "Sua VD9 phan nguong: dung --threshold_file de tu doc nguong da chon "
+             "tren validation (ghi boi tools/run_inference.py) thay vi tu go tay.",
+    )
+    parser.add_argument(
+        "--threshold_file", type=Path, default=None,
+        help="Doc nguong tu file phu <predictions>.threshold do tools/run_inference.py "
+             "ghi (neu checkpoint co pose_threshold). De trong = dung --threshold.",
+    )
     args = parser.parse_args()
+
+    threshold = args.threshold
+    if args.threshold_file is not None:
+        if args.threshold_file.exists():
+            threshold = float(args.threshold_file.read_text().strip())
+            print(f"[NGUONG] Doc tu {args.threshold_file}: threshold={threshold}")
+        else:
+            print(
+                f"[CANH BAO] Khong thay {args.threshold_file}, dung --threshold={args.threshold} "
+                "(vd checkpoint chua co --valfile nen chua chon nguong).",
+            )
 
     labels, aff_true, p_good, aff_pred = read_predictions(args.predictions)
     print(f"Tong so mau: {len(labels)}")
@@ -158,8 +180,8 @@ def main() -> None:
     else:
         print("  Khong co mau y_aff > 0 — bo qua cac chi so hoi quy.")
 
-    pm = pose_metrics(labels, p_good)
-    print("\nChi so phan loai cau hinh (toan bo mau):")
+    pm = pose_metrics(labels, p_good, threshold=threshold)
+    print(f"\nChi so phan loai cau hinh (toan bo mau, threshold={threshold}):")
     for k, v in pm.items():
         if isinstance(v, float):
             print(f"  {k:<20} = {v:.4f}")

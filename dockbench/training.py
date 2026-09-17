@@ -27,7 +27,7 @@ import os
 import sys
 from collections import defaultdict
 from contextlib import nullcontext
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import ignite
 import molgrid
@@ -54,7 +54,7 @@ from dockbench.losses import (
     ScaledNLLLoss,
     rmsd_pose_targets_and_ignore,
 )
-from dockbench.models import build_model, canonical_name, model_choices
+from dockbench.models import GEO_ABLATION_CHOICES, build_model, canonical_name, model_choices
 
 
 # ============================================================================
@@ -385,6 +385,19 @@ def options(args: Optional[List[str]] = None):
         action="store_true",
         help="GeoFormerDock: use aleatoric uncertainty head (default: off)",
     )
+    parser.add_argument(
+        "--geo_ablation",
+        type=str,
+        default="none",
+        choices=list(GEO_ABLATION_CHOICES),
+        help="GeoFormerDock (B0, docs/revision_plan_reviews.md Bang IV): "
+             "none = kien truc day du (mac dinh, giu nguyen 1.594.573 tham so); "
+             "no_geometry = bo luong hinh hoc pseudo-atom/RBF o nhanh tu the; "
+             "concat_fusion = thay cong hop nhat bang noi + chieu tuyen tinh; "
+             "no_key_bias = bo hang cong B_pocket trong attention (khong con thien vi "
+             "chu y theo khoa); simple_affinity = bo tokenizer + Transformer o nhanh "
+             "ai luc, chi con GAP + MLP.",
+    )
 
     # Flex pose
     parser.add_argument("--scale_flexpose_loss", type=float, default=1.0)
@@ -711,6 +724,53 @@ def _evaluation_step_flex(evaluator: Engine, batch, model):
     }
 
 
+def _select_pose_threshold(
+    model: nn.Module,
+    loader,
+    device: torch.device,
+    affinity: bool = True,
+    n_thresholds: int = 197,
+) -> Tuple[Optional[float], Optional[float], int, int]:
+    """
+    Sua VD9 phan nguong (docs/revision_plan_reviews.md QD-2): quet nguong quyet dinh
+    tren P(good) de toi da hoa Balanced Accuracy TREN LOADER DUOC TRUYEN VAO. Chi
+    duoc goi voi val_loader — KHONG BAO GIO voi test_loader, de tap kiem tra khong
+    tham gia vao bat ky quyet dinh nao (dung nguyen tac voi viec chon checkpoint).
+
+    Tra ve (best_threshold, best_balacc, n_pos, n_neg). Neu mot lop hoan toan vang
+    mat tren loader (n_pos=0 hoac n_neg=0) thi khong the chon nguong co y nghia —
+    tra ve (None, None, n_pos, n_neg), noi goi se giu nguyen mac dinh 0.5.
+    """
+    model.eval()
+    p_good_batches, label_batches = [], []
+    with torch.no_grad():
+        for batch in loader:
+            grids, labels = batch[0], batch[1]
+            outputs = model(grids)
+            pose_log = outputs[0] if affinity else outputs
+            p_good_batches.append(pose_log[:, 1].exp().detach().cpu())
+            label_batches.append(labels.detach().cpu())
+    p_good = torch.cat(p_good_batches).numpy()
+    labels = torch.cat(label_batches).numpy().astype(int)
+
+    n_pos = int((labels == 1).sum())
+    n_neg = int((labels == 0).sum())
+    if n_pos == 0 or n_neg == 0:
+        return None, None, n_pos, n_neg
+
+    thresholds = np.linspace(0.01, 0.99, n_thresholds)
+    best_t, best_balacc = 0.5, -1.0
+    for t in thresholds:
+        pred_good = p_good >= t
+        recall_pos = float((pred_good & (labels == 1)).sum()) / n_pos
+        recall_neg = float((~pred_good & (labels == 0)).sum()) / n_neg
+        balacc = 0.5 * (recall_pos + recall_neg)
+        if balacc > best_balacc:
+            best_balacc = balacc
+            best_t = float(t)
+    return best_t, best_balacc, n_pos, n_neg
+
+
 def _setup_evaluator(model, metrics_dict, affinity=False, flex=False, target_normalizer=None):
     assert not (affinity and flex)
     if affinity:
@@ -996,6 +1056,7 @@ def training(args):
     )
     best_epoch = None
     best_metrics = None
+    best_val_metrics = None
 
     if args.testfile is not None:
         test_example_provider = setup.setup_example_provider(
@@ -1111,6 +1172,7 @@ def training(args):
             "max_pseudo_atoms": args.max_pseudo_atoms,
             "num_transformer_layers": args.num_transformer_layers,
             "uncertainty": args.geoformer_uncertainty,
+            "geo_ablation": args.geo_ablation,
         }
     model = build_model(
         args.model,
@@ -1123,7 +1185,8 @@ def training(args):
         for s in outstreams:
             print(
                 f"  GeoFormerDock arch: num_transformer_layers={geoformer_kwargs['num_transformer_layers']}, "
-                f"max_pseudo_atoms={geoformer_kwargs['max_pseudo_atoms']}",
+                f"max_pseudo_atoms={geoformer_kwargs['max_pseudo_atoms']}, "
+                f"geo_ablation={geoformer_kwargs['geo_ablation']}",
                 file=s,
                 flush=True,
             )
@@ -1360,6 +1423,7 @@ def training(args):
 
     metrics_train = defaultdict(list)
     metrics_test = defaultdict(list)
+    metrics_val = defaultdict(list)
     metrics_train_ema = {}
     metrics_test_ema = {}
 
@@ -1555,7 +1619,7 @@ def training(args):
 
         @trainer.on(Events.EPOCH_COMPLETED(every=args.test_every))
         def log_test_results(trainer):
-            nonlocal best_score, bad_eval_count, best_epoch, best_metrics
+            nonlocal best_score, bad_eval_count, best_epoch, best_metrics, best_val_metrics
             _close_iter_bar_if_open()
             test_evaluator.run(test_loader)
             for outstream in outstreams:
@@ -1604,6 +1668,9 @@ def training(args):
                         epoch=trainer.state.epoch,
                         stream=outstream,
                     )
+                metrics_val["Epoch"].append(trainer.state.epoch)
+                for key, value in val_evaluator.state.metrics.items():
+                    metrics_val[key].append(value)
                 selection_metrics = val_evaluator.state.metrics
             else:
                 selection_metrics = test_evaluator.state.metrics
@@ -1615,6 +1682,10 @@ def training(args):
                 best_metrics = {
                     k: float(v) for k, v in test_evaluator.state.metrics.items()
                 }
+                if args.valfile is not None:
+                    best_val_metrics = {
+                        k: float(v) for k, v in val_evaluator.state.metrics.items()
+                    }
                 _save_weights(
                     best_weights_path,
                     epoch=trainer.state.epoch,
@@ -1687,6 +1758,50 @@ def training(args):
         )
         mlflogger.log_artifact(metrics_test_outfile)
 
+    if args.valfile is not None:
+        metrics_val_outfile = os.path.join(
+            args.out_dir, f"{log_root}_metrics_val.csv"
+        )
+        pd.DataFrame(metrics_val).to_csv(
+            metrics_val_outfile, float_format="%.5f", index=False,
+        )
+        mlflogger.log_artifact(metrics_val_outfile)
+
+    # ---- A1c (docs/revision_plan_reviews.md QD-2, sua VD9 phan nguong) ----
+    # Chon nguong quyet dinh cua bo phan loai tu the TREN VALIDATION, quet BalAcc
+    # tai chinh checkpoint TOT NHAT (khong phai epoch cuoi cung). Neu khong co
+    # --valfile, khong lam gi ca — nguong mac dinh 0.5 o downstream giu nguyen y
+    # het hanh vi cu.
+    pose_threshold = None
+    pose_threshold_val_balacc = None
+    pose_threshold_n_pos = pose_threshold_n_neg = None
+    if args.valfile is not None and os.path.exists(best_weights_path):
+        _ckpt_for_threshold = torch.load(best_weights_path, map_location=device)
+        model.load_state_dict(_ckpt_for_threshold["model_state_dict"])
+        (
+            pose_threshold, pose_threshold_val_balacc,
+            pose_threshold_n_pos, pose_threshold_n_neg,
+        ) = _select_pose_threshold(model, val_loader, device, affinity=affinity)
+        threshold_msg = (
+            f"  [NGUONG] Chon tren validation tai checkpoint tot nhat (epoch {best_epoch}): "
+            f"pose_threshold={pose_threshold}, BalAcc(val)={pose_threshold_val_balacc}, "
+            f"n_pos(val)={pose_threshold_n_pos}, n_neg(val)={pose_threshold_n_neg}"
+        )
+        for s in outstreams:
+            print(threshold_msg, file=s, flush=True)
+        if not args.silent:
+            print(threshold_msg, flush=True)
+        if pose_threshold is not None:
+            _ckpt_for_threshold["pose_threshold"] = pose_threshold
+            torch.save(_ckpt_for_threshold, best_weights_path)
+        else:
+            for s in outstreams:
+                print(
+                    "  [CANH BAO] Validation chi co 1 lop (n_pos=0 hoac n_neg=0) — "
+                    "khong chon duoc nguong co y nghia, giu mac dinh 0.5.",
+                    file=s, flush=True,
+                )
+
     # ---- Summary JSON ----
     final_train = (
         {k: float(v) for k, v in train_evaluator.state.metrics.items()}
@@ -1707,6 +1822,17 @@ def training(args):
         "strategy": "5_loss_pipeline",
         "params": sum(p.numel() for p in model.parameters()),
         "best_epoch": int(best_epoch) if best_epoch is not None else None,
+        # Sua VD9 (docs/revision_plan_reviews.md): "val" nghia la checkpoint/early
+        # stopping duoc chon tren tap validation doc lap, TEST khong tham gia chon
+        # gi ca — chi dung de bao cao cuoi cung. "test" = hanh vi cu (khong co
+        # --valfile), giu de phan biet ro cac run cu voi cac run da sua.
+        "selection_split": "val" if args.valfile is not None else "test",
+        "best_val_score": (
+            float(best_score) if (args.valfile is not None and best_score is not None) else None
+        ),
+        "val_metrics_at_best": best_val_metrics if args.valfile is not None else None,
+        "pose_threshold": pose_threshold,
+        "pose_threshold_val_balacc": pose_threshold_val_balacc,
         "best_weights": best_weights_path if os.path.exists(best_weights_path) else None,
         "final_weights": final_weights_path if os.path.exists(final_weights_path) else None,
         "final_acc": float(best_m.get("Accuracy", 0.0)),
@@ -1778,6 +1904,7 @@ def training(args):
     if canonical_name(args.model) == "geoformerdock":
         summary["max_pseudo_atoms"] = args.max_pseudo_atoms
         summary["num_transformer_layers"] = args.num_transformer_layers
+        summary["geo_ablation"] = args.geo_ablation
 
     summary_path = os.path.join(args.out_dir, "summary.json")
     with open(summary_path, 'w') as f:

@@ -30,6 +30,14 @@ neu khong kien truc se khong khop voi state_dict da luu:
         --testfile data/types/ref_uff_test0.types --data_root data \
         --out results/predictions/geoformerdock_uncertainty.csv
 
+Voi checkpoint tu ablation kien truc (B-1..B-5, xem docs/revision_plan_reviews.md
+Bang IV) — BAT BUOC --geo_ablation khop DUNG voi luc train:
+    python3 tools/run_inference.py \
+        --model geoformerdock --geo_ablation no_geometry \
+        --checkpoint results/models/geoformerdock_no_geometry/best_model.pt \
+        --testfile data/types/ref_uff_test0.types --data_root data \
+        --out results/predictions/geoformerdock_no_geometry.csv
+
 Smoke test (khong can data/ day du, dung demo_inference co san trong repo):
     python3 tools/run_inference.py \
         --model geoformerdock \
@@ -57,7 +65,7 @@ if str(_ROOT) not in sys.path:
 
 from dockbench import setup, utils
 from dockbench.dataloaders import GriddedExamplesLoader
-from dockbench.models import build_model, canonical_name
+from dockbench.models import GEO_ABLATION_CHOICES, build_model, canonical_name
 from dockbench.target_normalizer import TargetNormalizer
 
 
@@ -83,6 +91,12 @@ def options(argv=None):
     parser.add_argument(
         "--uncertainty", action="store_true",
         help="BAT BUOC neu checkpoint la ban ablation B1 (--geoformer_uncertainty luc train)",
+    )
+    parser.add_argument(
+        "--geo_ablation", type=str, default="none",
+        choices=list(GEO_ABLATION_CHOICES),
+        help="BAT BUOC khop voi --geo_ablation da dung luc train, neu khong load_state_dict "
+             "se bao loi unexpected/missing keys (kien truc khac nhau).",
     )
     parser.add_argument("--out", required=True, type=Path)
     return parser.parse_args(argv)
@@ -116,6 +130,7 @@ def main(argv=None) -> None:
             "max_pseudo_atoms": args.max_pseudo_atoms,
             "num_transformer_layers": args.num_transformer_layers,
             "uncertainty": args.uncertainty,
+            "geo_ablation": args.geo_ablation,
         }
 
     model = build_model(
@@ -126,6 +141,20 @@ def main(argv=None) -> None:
     model.load_state_dict(payload["model_state_dict"])
     model.eval()
     print(f"  Da nap checkpoint: epoch={payload.get('epoch')}, model={payload.get('model')}")
+
+    # Sua VD9 phan nguong (docs/revision_plan_reviews.md QD-2): neu checkpoint duoc
+    # train voi --valfile, no da co san "pose_threshold" chon tren validation. Ghi
+    # ra file phu <out>.threshold de tools/exact_metrics.py / paired_bootstrap*.py
+    # doc lai, thay vi phai go tay hoac ngam dinh 0.5.
+    pose_threshold = payload.get("pose_threshold")
+    if pose_threshold is not None:
+        threshold_path = args.out.with_suffix(args.out.suffix + ".threshold")
+        threshold_path.parent.mkdir(parents=True, exist_ok=True)
+        threshold_path.write_text(f"{pose_threshold}\n")
+        print(f"  pose_threshold (chon tren validation) = {pose_threshold} -> {threshold_path}")
+    else:
+        print("  pose_threshold: khong co trong checkpoint (train khong dung --valfile) — "
+              "downstream se dung mac dinh 0.5.")
 
     target_normalizer = None
     norm_state = payload.get("target_normalizer")

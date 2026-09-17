@@ -2,12 +2,24 @@
 # Chay qua dem: train lai geoformerdock + 3 baseline chinh voi checkpoint
 # selection/early-stopping dua tren VALIDATION (khong con dua tren TEST) - sua VD9.
 #
-# Uu tien: geoformerdock truoc (quan trong nhat cho luan diem chinh cua bai),
-# roi den gnina_dense, gnina_default2018, pafnucy neu con thoi gian/GPU.
+# A2 (docs/revision_plan_reviews.md Muc 3): xep theo SEED-MAJOR, khong phai
+# MODEL-MAJOR — moi "luot" chay du 4 mo hinh o 1 seed, de cat ngang o bat ky dau
+# van co mot bang hoan chinh (vd het GPU sau luot 1 van dung duoc, khong phai
+# cho het ca 3 luot moi co so). Uu tien: geoformerdock truoc trong tung luot
+# (quan trong nhat cho luan diem chinh cua bai), roi den gnina_dense,
+# gnina_default2018, pafnucy.
+#
+# Chay lai an toan: neu OUTDIR/summary.json da co (tu lan chay truoc bi ngat),
+# BO QUA cau hinh (seed, model) do, khong train lai — cho phep dut giua chung
+# roi chay lai script nay ma khong mat viec da xong.
 #
 # Tu cho GPU trong (khong tranh chap voi nguoi khac dang dung chung may),
 # tu giam batch_size (256 -> 128 -> 64) neu OOM, tiep tuc sang model tiep theo
 # neu 1 model that bai (khong dung ca chuoi qua dem chi vi 1 model loi).
+#
+# Bien moi truong tuy chinh:
+#   SEEDS="2026 2027 2028"   danh sach seed, cach nhau boi dau cach (mac dinh 3 seed)
+#   MODELS="geoformerdock gnina_dense gnina_default2018 pafnucy"  (mac dinh)
 
 set -uo pipefail
 
@@ -53,8 +65,14 @@ wait_for_gpu() {
 
 train_one() {
     local MODEL="$1"
-    local OUTDIR="results/models/${MODEL}_valsplit"
-    local LOGFILE="results/logs/${MODEL}_valsplit.log"
+    local SEED="$2"
+    local OUTDIR="results/models/${MODEL}_valsplit_s${SEED}"
+    local LOGFILE="results/logs/${MODEL}_valsplit_s${SEED}.log"
+
+    if [ -f "${OUTDIR}/summary.json" ]; then
+        echo "=== ${MODEL} seed=${SEED}: DA CO ${OUTDIR}/summary.json — BO QUA (xoa thu muc neu muon chay lai) ==="
+        return 0
+    fi
 
     for bs in 256 128 64; do
         echo "=== ${MODEL}: thu batch_size=${bs} ($(date)) ==="
@@ -99,44 +117,56 @@ train_one() {
             --early_stop_metric composite_cidx_balacc --early_stop_composite_w_cidx 0.5 \
             --early_stop_patience 25 --early_stop_min_delta 0.0001 \
             --scale_dist_constraint 0.02 --scale_anchor_loss 0.01 \
-            --normalize_targets --seed 2026 \
+            --normalize_targets --seed "${SEED}" \
             "${GEO_ARGS[@]}" "${AMP_ARGS[@]}" \
             -g cuda:0 \
             -o "${OUTDIR}" \
             2>&1 | tee "${LOGFILE}"
         then
             if [ -f "${OUTDIR}/summary.json" ]; then
-                echo "=== ${MODEL}: THANH CONG voi batch_size=${bs} ($(date)) ==="
+                echo "=== ${MODEL} seed=${SEED}: THANH CONG voi batch_size=${bs} ($(date)) ==="
                 return 0
             fi
         fi
-        echo "=== ${MODEL}: THAT BAI o batch_size=${bs}, thu nho hon ==="
+        echo "=== ${MODEL} seed=${SEED}: THAT BAI o batch_size=${bs}, thu nho hon ==="
     done
-    echo "=== ${MODEL}: THAT BAI CA 3 MUC batch_size — BO QUA, sang model tiep theo ===" >&2
+    echo "=== ${MODEL} seed=${SEED}: THAT BAI CA 3 MUC batch_size — BO QUA, sang cau hinh tiep theo ===" >&2
     return 1
 }
+
+# SEEDS/MODELS co the ghi de qua bien moi truong (xem chu thich dau file).
+read -ra SEED_LIST <<< "${SEEDS:-2026 2027 2028}"
+read -ra MODEL_LIST <<< "${MODELS:-geoformerdock gnina_dense gnina_default2018 pafnucy}"
 
 echo "########## BAT DAU OVERNIGHT RUN — sua VD9 (chon model bang validation) ##########"
 echo "Bat dau luc: $(date)"
 echo "Train (split): ${TRAIN_FILE}"
 echo "Val (chon checkpoint/early-stop): ${VAL_FILE}"
 echo "Test (CHUA TUNG dung de chon model, chi de bao cao): ${TEST_FILE}"
+echo "Seeds (thu tu luot): ${SEED_LIST[*]}"
+echo "Models (thu tu trong tung luot): ${MODEL_LIST[*]}"
 
 RESULTS_SUMMARY=()
-for MODEL in geoformerdock gnina_dense gnina_default2018 pafnucy; do
+for SEED in "${SEED_LIST[@]}"; do
     echo ""
-    echo "############################################################"
-    echo "MODEL: ${MODEL}  ($(date))"
-    echo "############################################################"
-    if wait_for_gpu 15000 240; then
-        if train_one "${MODEL}"; then
-            RESULTS_SUMMARY+=("${MODEL}: OK")
+    echo "=========================================================="
+    echo "LUOT seed=${SEED}  ($(date))"
+    echo "=========================================================="
+    for MODEL in "${MODEL_LIST[@]}"; do
+        echo ""
+        echo "############################################################"
+        echo "MODEL: ${MODEL}  seed=${SEED}  ($(date))"
+        echo "############################################################"
+        if wait_for_gpu 15000 240; then
+            if train_one "${MODEL}" "${SEED}"; then
+                RESULTS_SUMMARY+=("seed=${SEED} ${MODEL}: OK")
+            else
+                RESULTS_SUMMARY+=("seed=${SEED} ${MODEL}: THAT BAI (het 3 muc batch_size)")
+            fi
         else
-            RESULTS_SUMMARY+=("${MODEL}: THAT BAI (het 3 muc batch_size)")
+            RESULTS_SUMMARY+=("seed=${SEED} ${MODEL}: BO QUA (khong cho duoc GPU trong 4h)")
         fi
-    else
-        RESULTS_SUMMARY+=("${MODEL}: BO QUA (khong cho duoc GPU trong 4h)")
-    fi
+    done
 done
 
 echo ""

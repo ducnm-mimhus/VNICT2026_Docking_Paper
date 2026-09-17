@@ -22,7 +22,7 @@ from .common import (
     weights_and_biases_init,
 )
 from .equibind import EquiBind, EquiBindAffinity
-from .geoformerdock import GeoFormerDock
+from .geoformerdock import GEO_ABLATION_CHOICES, GeoFormerDock
 from .gnina_default2018 import (
     Default2017,
     Default2017Affinity,
@@ -56,6 +56,7 @@ __all__ = [
     "canonical_name",
     "model_choices",
     "build_model",
+    "GEO_ABLATION_CHOICES",
     # shared
     "AffinityCalibration",
     "StableBatchNorm3d",

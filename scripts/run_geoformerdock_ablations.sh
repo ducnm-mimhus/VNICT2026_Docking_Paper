@@ -91,6 +91,12 @@ run_ablation() {
         echo "  [SKIP] ${OUTDIR}/summary.json da ton tai. Xoa thu muc neu muon chay lai."
         return 0
     fi
+    # Neu OUTDIR ton tai nhung KHONG co summary.json (lan truoc bi crash giua
+    # chung — vd OOM, mat ket noi), no van co the da chua checkpoint_*.pt tu
+    # ignite. Phai xoa truoc khi chay lai, neu khong ignite's Checkpoint tu
+    # choi ghi vao thu muc khong rong va bao loi ngay tu dau (cung loi da gap
+    # o run_smoketest()).
+    rm -rf "${OUTDIR}"
 
     local EXTRA_ARGS=()
     local BALANCE_ARGS=()
@@ -197,6 +203,12 @@ run_smoketest() {
     echo "  KHONG dung ket qua nay de danh gia mo hinh: ca 2 mau deu label=1,"
     echo "  cac chi so phan loai (BalAcc, PR-AUC, Recall Neg...) se suy bien."
     echo "=========================================="
+
+    # Xoa OUTDIR truoc khi chay: neu lan chay truoc da tao checkpoint_*.pt (vd
+    # chay lai cell tren Colab/Kaggle sau khi da PASS mot lan), ignite's
+    # Checkpoint tu choi ghi vao thu muc khong rong va bao loi ValueError ngay
+    # tu dau, truoc ca khi training bat dau — smoke test phai idempotent.
+    rm -rf "${OUTDIR}"
 
     python -u -m dockbench.training \
         "${DEMO_TYPES}" \

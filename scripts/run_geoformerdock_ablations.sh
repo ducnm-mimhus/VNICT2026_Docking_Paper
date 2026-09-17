@@ -243,6 +243,57 @@ run_smoketest() {
         tail -40 "${LOGFILE}" 2>/dev/null || true
         exit 1
     fi
+
+    # --- Lan chay thu 2: BAT --valfile de kiem tra rieng nhanh A1a-A1c (chua ai
+    # chay lan nao) — training_metrics_val.csv, chon nguong tren validation,
+    # cac truong moi trong summary.json. Dung LAI CHINH demo_types lam --valfile:
+    # ca 2 mau deu label=1 nen day dung la truong hop bien n_neg=0 —
+    # _select_pose_threshold() phai tra ve None + in canh bao, KHONG duoc crash.
+    local OUTDIR_VAL="${MODELS_DIR}/geoformerdock_smoketest_valsplit"
+    local LOGFILE_VAL="${LOGS_DIR}/geoformerdock_smoketest_valsplit.log"
+    rm -rf "${OUTDIR_VAL}"
+
+    echo ""
+    echo "=========================================="
+    echo "SMOKE TEST 2 — co --valfile (kiem tra A1a-A1c: metrics_val.csv, chon"
+    echo "  nguong tren validation, sua VD9). Dung lai demo_types lam val (ca 2"
+    echo "  mau label=1 -> truong hop bien n_neg=0, PHAI canh bao chu khong crash)."
+    echo "=========================================="
+
+    python -u -m dockbench.training \
+        "${DEMO_TYPES}" \
+        --testfile "${DEMO_TYPES}" \
+        --valfile "${DEMO_TYPES}" \
+        -d "${DEMO_ROOT}" \
+        -m geoformerdock \
+        --label_pos 0 \
+        --affinity_pos 1 \
+        --rmsd_pos 2 \
+        --batch_size 2 \
+        --no_random_rotation \
+        --random_translation 0.0 \
+        -i 3 \
+        --test_every 1 \
+        --checkpoint_every 3 \
+        --no_roc_auc \
+        --max_pseudo_atoms 12 \
+        --disable_pose_prior_init \
+        --seed 2026 \
+        -g "${SMOKETEST_DEVICE:-cpu}" \
+        -o "${OUTDIR_VAL}" \
+        2>&1 | tee "${LOGFILE_VAL}"
+
+    if [ -f "${OUTDIR_VAL}/summary.json" ]; then
+        echo ""
+        echo "  Smoke test 2 (valfile) PASS: chay het, khong crash."
+        echo "  Kiem tra thu (phai thay selection_split='val', metrics_val.csv co 3 dong):"
+        echo "    python3 -c \"import json; d=json.load(open('${OUTDIR_VAL}/summary.json')); print({k: d[k] for k in ('selection_split','best_val_score','pose_threshold','pose_threshold_val_balacc')})\""
+        echo "    ls ${OUTDIR_VAL}/*_metrics_val.csv"
+    else
+        echo "  Smoke test 2 (valfile) FAIL — xem log:"
+        tail -40 "${LOGFILE_VAL}" 2>/dev/null || true
+        exit 1
+    fi
 }
 
 MODE="${1:-}"

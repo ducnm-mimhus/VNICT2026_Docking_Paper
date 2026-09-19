@@ -103,6 +103,14 @@ echo ""
 echo "=================================================="
 echo "4. Moi truong Python (conda env 'dockbench')"
 echo "=================================================="
+# `conda` co the chua co tren PATH trong mot phien SSH khong tuong tac (khong
+# nap .bashrc), du conda DA duoc cai — thu nap thang conda.sh o duong dan cac
+# script san xuat (run_overnight_valsplit.sh...) da hardcode, truoc khi ket
+# luan la thieu.
+if ! command -v conda >/dev/null 2>&1; then
+    # shellcheck disable=SC1091
+    source /data/miniconda/etc/profile.d/conda.sh 2>/dev/null
+fi
 if command -v conda >/dev/null 2>&1; then
     if conda env list 2>/dev/null | grep -q "^dockbench "; then
         ok "conda env 'dockbench' ton tai"

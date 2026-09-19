@@ -49,13 +49,23 @@ wait_for_gpu() {
     local waited=0
     while true; do
         local free_mib
-        free_mib=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits | head -1 | tr -d ' ')
-        echo "  [$(date '+%H:%M:%S')] GPU free: ${free_mib} MiB (can >= ${need_mib} MiB)"
-        if [ "${free_mib}" -ge "${need_mib}" ] 2>/dev/null; then
-            return 0
+        # 2>/dev/null: neu nvidia-smi loi (vd "khong giao tiep duoc voi driver"),
+        # loi in ra STDOUT tren mot so may, khong phai stderr — truoc day bi
+        # "tr -d ' '" nhet luon vao free_mib thanh mot chuoi non-numeric dai,
+        # khien phep so sanh "-ge" luon that bai TRONG IM LANG (2>/dev/null che
+        # loi bash) va vong lap cu the treo toi 4 tieng ma khong bao gio bao ro
+        # la driver hong chu khong phai GPU dang ban. Kiem tra numeric TRUOC.
+        free_mib=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
+        if [[ "${free_mib}" =~ ^[0-9]+$ ]]; then
+            echo "  [$(date '+%H:%M:%S')] GPU free: ${free_mib} MiB (can >= ${need_mib} MiB)"
+            if [ "${free_mib}" -ge "${need_mib}" ]; then
+                return 0
+            fi
+        else
+            echo "  [$(date '+%H:%M:%S')] KHONG doc duoc so MiB trong tu nvidia-smi (driver GPU co the chua san sang) — thu lai sau"
         fi
         if [ "${waited}" -ge "${max_wait_min}" ]; then
-            echo "  Da cho ${max_wait_min} phut, GPU van khong du trong." >&2
+            echo "  Da cho ${max_wait_min} phut, GPU van khong san sang." >&2
             return 1
         fi
         sleep 120

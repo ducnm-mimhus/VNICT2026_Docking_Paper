@@ -20,3 +20,8 @@ results/models/*/*.pt
 .qodo/
 .cadence/
 .vscode/
+
+# Kaggle output tai ve de kiem tra thu cong (checkpoint/data giai nen tu
+# .zip download) — khong meant cho git, qua nang va la ban sao cuc bo.
+_output_/
+*.zip

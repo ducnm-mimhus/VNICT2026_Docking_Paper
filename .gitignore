@@ -23,5 +23,9 @@ results/models/*/*.pt
 
 # Kaggle output tai ve de kiem tra thu cong (checkpoint/data giai nen tu
 # .zip download) — khong meant cho git, qua nang va la ban sao cuc bo.
-_output_/
+# "_output_*" (khong chi "_output_/") vi trinh duyet/file manager tu them hau
+# to khi tai nhieu file trung ten, vd "_output_ Gnina_Dense".
+_output_*/
 *.zip
+*.txt
+!requirements.txt

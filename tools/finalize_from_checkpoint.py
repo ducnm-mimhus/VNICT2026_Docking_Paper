@@ -12,16 +12,20 @@ KHONG train lai tu dau (chi vai phut, khong can hang gio):
      schema ma dockbench.training.training() se ghi neu chay het binh
      thuong (xem cuoi ham training() trong dockbench/training.py).
 
-QUAN TRONG: TRAIN_ARGV duoi day PHAI khop NGUYEN VAN voi lenh training that
-da chay (vd scripts/run_overnight_valsplit.sh train_one(), hoac cell Track A
-trong notebooks/kaggle_verify_and_valsplit.ipynb) — dac biet cac tham so anh
-huong kien truc model/data loader (batch_size, max_pseudo_atoms, geo_ablation,
+QUAN TRONG: build_train_argv() duoi day PHAI khop NGUYEN VAN voi lenh training
+that da chay (vd scripts/run_overnight_valsplit.sh train_one(), hoac cac cell
+Track A trong notebooks/) — dac biet cac tham so anh huong kien truc
+model/data loader (batch_size, max_pseudo_atoms chi cho geoformerdock,
 normalize_targets, seed...). Sai 1 trong so nay se cho metrics/threshold
-KHONG khop voi checkpoint da train.
+KHONG khop voi checkpoint da train. Dung --model/--batch_size de chay cho
+gnina_dense/gnina_default2018/pafnucy/geoformerdock (--batch_size phai khop
+dung muc da THANH CONG trong log training — xem "THANH CONG voi
+batch_size=..." trong log, vi co the da fallback 256->128->64 do OOM).
 
 Cach dung (tren may co GPU + torch + molgrid, vd Kaggle):
     cd VNICT2026_Docking_Paper
     python3 tools/finalize_from_checkpoint.py \
+        --model geoformerdock --batch_size 256 \
         --checkpoint results/models/geoformerdock_valsplit_s2026/best_model.pt \
         --out_dir results/models/geoformerdock_valsplit_s2026
 """
@@ -52,43 +56,45 @@ from dockbench.training import (  # noqa: E402
     options,
 )
 
-# Sao chep NGUYEN VAN tu train_one() (scripts/run_overnight_valsplit.sh) cho
-# dong geoformerdock, seed=2026 — dung batch_size=256 vi log xac nhan khong
-# co OOM/fallback (chay thang voi 256 tu dau, khong thay dong "THAT BAI o
-# batch_size=256" trong log).
-TRAIN_ARGV = [
-    "data/types/ref_uff_train0_split.types",
-    "--testfile", "data/types/ref_uff_test0.types",
-    "--valfile", "data/types/ref_uff_val0.types",
-    "-d", "data",
-    "-m", "geoformerdock",
-    "--label_pos", "0", "--affinity_pos", "1",
-    "--base_lr", "0.001", "--weight_decay", "0.01",
-    "--batch_size", "256",
-    "--random_translation", "1.0", "--clip_gradients", "5.0",
-    "-i", "100",
-    "--iteration_scheme", "small",
-    "--lr_dynamic", "--warmup_epochs", "2",
-    "--test_every", "2", "--checkpoint_every", "100",
-    "--no_roc_auc",
-    "--scale_affinity_loss", "1.0", "--delta_affinity_loss", "1.0",
-    "--scale_ranking", "0.05", "--ranking_temperature", "1.0", "--ranking_num_pairs", "128",
-    "--hard_neg_fraction", "0.3",
-    "--rank_warmup_epochs", "10", "--rank_rampup_epochs", "15",
-    "--scale_pose_coupling", "0.00", "--lambda_pose", "1.2",
-    "--pose_warmup_epochs", "0", "--pose_only_epochs", "4",
-    "--pose_loss_type", "focal", "--pose_focal_gamma", "2.0", "--pose_focal_alpha", "0.75",
-    "--pose_class_normalize", "--pose_balance_batch", "--pose_balance_target_per_class", "32",
-    "--pose_prior_logit_scale", "0.25", "--disable_pose_prior_init",
-    "--pose_loss_scale", "0.5", "--pose_total_weight", "0.85", "--aff_total_weight", "0.15",
-    "--metric_ema_alpha", "0.3",
-    "--early_stop_metric", "composite_cidx_balacc", "--early_stop_composite_w_cidx", "0.5",
-    "--early_stop_patience", "25", "--early_stop_min_delta", "0.0001",
-    "--scale_dist_constraint", "0.02", "--scale_anchor_loss", "0.01",
-    "--normalize_targets", "--seed", "2026",
-    "--max_pseudo_atoms", "12",
-    "--use_amp",
-]
+# Sao chep NGUYEN VAN tu train_one() (scripts/run_overnight_valsplit.sh), seed=2026.
+# --max_pseudo_atoms chi co tac dung voi geoformerdock (build_model() bo qua
+# geoformer_kwargs cho cac model khac) nhung de nguyen trong argv cho ca 4
+# model, giong het cach train_one() luon truyen GEO_ARGS chi khi MODEL=geoformerdock
+# — o day don gian hoa bang cach luon truyen, vo hai voi 3 model con lai.
+def build_train_argv(model: str, batch_size: int) -> list:
+    return [
+        "data/types/ref_uff_train0_split.types",
+        "--testfile", "data/types/ref_uff_test0.types",
+        "--valfile", "data/types/ref_uff_val0.types",
+        "-d", "data",
+        "-m", model,
+        "--label_pos", "0", "--affinity_pos", "1",
+        "--base_lr", "0.001", "--weight_decay", "0.01",
+        "--batch_size", str(batch_size),
+        "--random_translation", "1.0", "--clip_gradients", "5.0",
+        "-i", "100",
+        "--iteration_scheme", "small",
+        "--lr_dynamic", "--warmup_epochs", "2",
+        "--test_every", "2", "--checkpoint_every", "100",
+        "--no_roc_auc",
+        "--scale_affinity_loss", "1.0", "--delta_affinity_loss", "1.0",
+        "--scale_ranking", "0.05", "--ranking_temperature", "1.0", "--ranking_num_pairs", "128",
+        "--hard_neg_fraction", "0.3",
+        "--rank_warmup_epochs", "10", "--rank_rampup_epochs", "15",
+        "--scale_pose_coupling", "0.00", "--lambda_pose", "1.2",
+        "--pose_warmup_epochs", "0", "--pose_only_epochs", "4",
+        "--pose_loss_type", "focal", "--pose_focal_gamma", "2.0", "--pose_focal_alpha", "0.75",
+        "--pose_class_normalize", "--pose_balance_batch", "--pose_balance_target_per_class", "32",
+        "--pose_prior_logit_scale", "0.25", "--disable_pose_prior_init",
+        "--pose_loss_scale", "0.5", "--pose_total_weight", "0.85", "--aff_total_weight", "0.15",
+        "--metric_ema_alpha", "0.3",
+        "--early_stop_metric", "composite_cidx_balacc", "--early_stop_composite_w_cidx", "0.5",
+        "--early_stop_patience", "25", "--early_stop_min_delta", "0.0001",
+        "--scale_dist_constraint", "0.02", "--scale_anchor_loss", "0.01",
+        "--normalize_targets", "--seed", "2026",
+        "--max_pseudo_atoms", "12",
+        "--use_amp",
+    ]
 
 # Cung gia tri hardcode nhu trong dockbench.training.training() (khong phai
 # tham so CLI, xem dong ~1318-1319 cua dockbench/training.py).
@@ -100,17 +106,21 @@ def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--checkpoint", required=True, help="best_model.pt bi dang do (co epoch/score, chua co pose_threshold)")
     p.add_argument("--out_dir", required=True, help="Thu muc se ghi summary.json (thuong = thu muc chua checkpoint)")
+    p.add_argument("--model", default="geoformerdock",
+                    choices=["geoformerdock", "gnina_dense", "gnina_default2018", "pafnucy"])
+    p.add_argument("--batch_size", type=int, default=256,
+                    help="PHAI khop dung muc da THANH CONG trong log training that (256/128/64)")
     p.add_argument("--device", default="cuda:0")
     cli = p.parse_args()
 
-    args = options(TRAIN_ARGV)
+    args = options(build_train_argv(cli.model, cli.batch_size))
     args.out_dir = cli.out_dir
     device = torch.device(cli.device if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
 
     affinity = args.affinity_pos is not None
     flex = args.flexlabel_pos is not None
-    assert affinity and not flex, "Script nay chi viet cho geoformerdock (affinity=True, flex=False)"
+    assert affinity and not flex, "Ca 4 model Track A deu affinity=True, flex=False - kiem tra lai --affinity_pos/--flexlabel_pos"
 
     # ---- Data loaders (cung code path voi dockbench.training.training()) ----
     print("Dang doc data (chi de fit target_normalizer + lay dims, KHONG train)...")
